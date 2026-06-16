@@ -34,6 +34,10 @@ aber im selben System durchsuchbar.
 | [`docs/ARCHITEKTUR.md`](docs/ARCHITEKTUR.md) | Technische Optionen & Vorschlag |
 | [`docs/ROADMAP.md`](docs/ROADMAP.md) | Schrittweise Umsetzung (MVP → Ausbau) |
 
+> 🖥️ **HTML-Version** der Dokumentation (im afol.lu-Look): [`docs/html/index.html`](docs/html/index.html)
+> — lokal im Browser öffnen. Markenfarben/Logo/Schrift sind zentral in
+> [`docs/html/assets/style.css`](docs/html/assets/style.css) (CSS-Variablen unter `:root`) anpassbar.
+
 ## Mitmachen
 
 Dieses Projekt entsteht für und mit der afol.lu Community. Vorschläge,

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BrickBank — Dokumentation | afol.lu</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <div class="brick-strip"></div>
+  <header class="site">
+    <nav class="nav">
+      <a class="brand" href="index.html"><span class="logo-brick"></span>Brick<b>Bank</b></a>
+      <div class="nav-links">
+        <a class="active" href="index.html">Start</a>
+        <a href="konzept.html">Konzept</a>
+        <a href="datenmodell.html">Datenmodell</a>
+        <a href="architektur.html">Architektur</a>
+        <a href="roadmap.html">Roadmap</a>
+      </div>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <div class="hero-inner">
+      <span class="pill">Planungs- &amp; Konzeptphase</span>
+      <h1>BrickBank 🧱</h1>
+      <p>Das Inventar-System der afol.lu Community. Es beantwortet zwei Fragen:
+         <strong>Wie viele Steine haben wir?</strong> und <strong>Wo sind sie gelagert?</strong> —
+         für Vereins- und Privatbestände.</p>
+    </div>
+  </section>
+
+  <main>
+    <div class="card">
+      <h2>Worum geht es?</h2>
+      <p>BrickBank verwaltet sowohl <strong>Vereinsbestände</strong> (gemeinsames Eigentum der
+         Community) als auch <strong>Privatbestände</strong> einzelner Mitglieder — klar getrennt,
+         aber im selben System durchsuchbar.</p>
+      <ul>
+        <li><strong>Bestand erfassen</strong> — Teile nach Teilenummer, Farbe und Menge.</li>
+        <li><strong>Lagerorte abbilden</strong> — hierarchisch (Raum → Schrank → Schublade → Box/Fach).</li>
+        <li><strong>Eigentum trennen</strong> — Vereins- vs. Privatbestand.</li>
+        <li><strong>Suchen &amp; filtern</strong> — „Wo sind unsere roten 2×4-Steine und wie viele haben wir?“</li>
+      </ul>
+      <blockquote>Status: Planungs-/Konzeptphase. Technologie festgelegt:
+         <strong>HTML + PHP&nbsp;7 + MySQL</strong>.</blockquote>
+    </div>
+
+    <h2>Dokumentation</h2>
+    <div class="grid" style="margin-top:16px">
+      <a class="doc-card" href="konzept.html">
+        <h3>Konzept</h3>
+        <span>Domäne, Glossar und Anwendungsfälle.</span>
+      </a>
+      <a class="doc-card" href="datenmodell.html">
+        <h3>Datenmodell</h3>
+        <span>Entitäten, Beziehungen und MySQL-DDL.</span>
+      </a>
+      <a class="doc-card" href="architektur.html">
+        <h3>Architektur</h3>
+        <span>HTML + PHP 7 + MySQL, Struktur, Sicherheit.</span>
+      </a>
+      <a class="doc-card" href="roadmap.html">
+        <h3>Roadmap</h3>
+        <span>Schrittweise Umsetzung von MVP bis Ausbau.</span>
+      </a>
+    </div>
+  </main>
+
+  <footer class="site">
+    BrickBank · ein Projekt der <a href="https://afol.lu">afol.lu</a> Community (Adult Fans of LEGO Luxembourg)
+  </footer>
+</body>
+</html>

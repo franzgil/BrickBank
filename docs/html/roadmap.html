@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Roadmap — BrickBank</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <div class="brick-strip"></div>
+  <header class="site">
+    <nav class="nav">
+      <a class="brand" href="index.html"><span class="logo-brick"></span>Brick<b>Bank</b></a>
+      <div class="nav-links">
+        <a href="index.html">Start</a>
+        <a href="konzept.html">Konzept</a>
+        <a href="datenmodell.html">Datenmodell</a>
+        <a href="architektur.html">Architektur</a>
+        <a class="active" href="roadmap.html">Roadmap</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <div class="card">
+      <p>Schrittweise Umsetzung — vom kleinsten nutzbaren Stand (MVP) zum Ausbau.
+         Jede Phase ist für sich genommen lauffähig und liefert Mehrwert.</p>
+    </div>
+
+    <div class="card">
+      <h2>Phase 0 — Konzept &amp; Planung ✅</h2>
+      <ul>
+        <li>README, Konzept, Datenmodell, Architektur dokumentiert.</li>
+        <li>Technologie festgelegt: HTML + PHP 7 + MySQL.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>Phase 1 — Grundgerüst &amp; Datenbank</h2>
+      <ul>
+        <li>Projektstruktur anlegen (<code>public/</code>, <code>src/</code>, <code>templates/</code>, <code>sql/</code>, <code>config/</code>).</li>
+        <li><code>sql/schema.sql</code> umsetzen (Tabellen aus dem Datenmodell).</li>
+        <li>PDO-Verbindung (<code>src/Database.php</code>) + Konfigurationsvorlage.</li>
+        <li>Front-Controller mit einfachem Routing, „Hello BrickBank“-Seite.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>Phase 2 — Stammdaten pflegen</h2>
+      <ul>
+        <li>CRUD für <strong>Besitzer</strong> (Verein/Privat).</li>
+        <li>CRUD für <strong>Lagerorte</strong> inkl. Hierarchie (Eltern-Auswahl).</li>
+        <li>CRUD für <strong>Teile</strong> und <strong>Farben</strong>; Seed mit gängigen Farben.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>Phase 3 — Bestandsführung (Kernfunktion)</h2>
+      <ul>
+        <li><strong>Bestandsposten erfassen</strong>: Element (Teil+Farbe) + Ort + Besitzer + Menge.</li>
+        <li>Menge <strong>entnehmen/zurücklegen</strong> (UC3).</li>
+        <li>Posten <strong>umlagern</strong> (UC4).</li>
+        <li>Listenansicht aller Bestände mit Mengen und Lagerorten.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>Phase 4 — Suche &amp; Übersichten</h2>
+      <ul>
+        <li>Suche/Filter nach Teil, Farbe, Ort, Besitzer (UC2).</li>
+        <li>Aggregierte Sicht: Gesamtmenge je Element über alle Orte.</li>
+        <li>Lagerort-Übersicht „Was liegt in X?“ inkl. Unter-Orte (UC6).</li>
+        <li>Trennung/Filter Vereins- vs. Privatbestand (UC5).</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>Phase 5 — Komfort &amp; Härtung</h2>
+      <ul>
+        <li>CSRF-Schutz, durchgängige Validierung, Fehlerseiten.</li>
+        <li>Mehrsprachigkeit (LU/FR/DE/EN), falls gewünscht.</li>
+        <li>Optional: Mitglieder-Logins und Rollen.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>Spätere Ideen (Backlog)</h2>
+      <ul>
+        <li>Import aus externem Katalog (z.&nbsp;B. BrickLink) für Teile/Farben.</li>
+        <li>Barcode-/QR-Etiketten für Lagerorte.</li>
+        <li>Verleih-Workflow (Reservierung, Rückgabe).</li>
+        <li>Export/Reports (CSV, Druckansicht).</li>
+      </ul>
+    </div>
+  </main>
+
+  <footer class="site">
+    BrickBank · ein Projekt der <a href="https://afol.lu">afol.lu</a> Community
+  </footer>
+</body>
+</html>
