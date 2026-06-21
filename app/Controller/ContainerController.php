@@ -122,9 +122,4 @@ class ContainerController extends Controller
             'old'           => [],
         ], $extra);
     }
-
-    private function nullableInt($value): ?int
-    {
-        return ($value === '' || $value === null) ? null : (int) $value;
-    }
 }

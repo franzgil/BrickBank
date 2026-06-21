@@ -64,4 +64,10 @@ abstract class Controller
         header('Location: ' . $url);
         exit;
     }
+
+    /** '' oder null → null, sonst Integer. */
+    protected function nullableInt($value): ?int
+    {
+        return ($value === '' || $value === null) ? null : (int) $value;
+    }
 }
