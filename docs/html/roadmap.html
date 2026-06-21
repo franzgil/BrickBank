@@ -27,6 +27,7 @@
         <li><a href="konzept.html">Konzept</a></li>
         <li><a href="datenmodell.html">Datenmodell</a></li>
         <li><a href="architektur.html">Architektur</a></li>
+        <li><a href="integration.html">Integration</a></li>
         <li class="active"><a href="roadmap.html">Roadmap</a></li>
       </ul>
     </div>
@@ -52,20 +53,33 @@
         <div class="contentBoxHeader"><span class="icon"></span>Phase 0 — Konzept &amp; Planung ✅</div>
         <div class="contentBoxBody">
           <ul>
-            <li>README, Konzept, Datenmodell, Architektur dokumentiert.</li>
-            <li>Technologie festgelegt: HTML + PHP 7 + MySQL.</li>
+            <li>README, Konzept, Datenmodell, Architektur, Integration dokumentiert.</li>
+            <li>Technologie festgelegt: eigenständige <strong>MVC-App</strong> (PHP/MySQL),
+                gekoppelt an <strong>WoltLab Suite 5.5</strong> per <strong>SSO</strong>.</li>
           </ul>
         </div>
       </article>
 
       <article class="contentBox">
-        <div class="contentBoxHeader"><span class="icon"></span>Phase 1 — Grundgerüst &amp; Datenbank</div>
+        <div class="contentBoxHeader"><span class="icon"></span>Phase 1 — MVC-Grundgerüst &amp; Datenbank</div>
         <div class="contentBoxBody">
           <ul>
-            <li>Projektstruktur anlegen (<code>public/</code>, <code>src/</code>, <code>templates/</code>, <code>sql/</code>, <code>config/</code>).</li>
+            <li>Projektstruktur anlegen (<code>public/</code>, <code>app/Core|Controller|Model|View|Integration</code>, <code>sql/</code>, <code>config/</code>).</li>
+            <li>Front-Controller + Router + Controller-Basisklasse + View-Renderer (MVC-Kern).</li>
             <li><code>sql/schema.sql</code> umsetzen (Tabellen aus dem Datenmodell).</li>
-            <li>PDO-Verbindung (<code>src/Database.php</code>) + Konfigurationsvorlage.</li>
-            <li>Front-Controller mit einfachem Routing, „Hello BrickBank“-Seite.</li>
+            <li>PDO-Verbindung + Konfigurationsvorlage; „Hello BrickBank“-Seite im afol.lu-Design.</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="contentBox">
+        <div class="contentBoxHeader"><span class="icon"></span>Phase 1b — WoltLab-SSO-Anbindung</div>
+        <div class="contentBoxBody">
+          <ul>
+            <li><code>Integration/</code>-Layer: WSC-Session-Cookie lesen, Session/<code>userID</code> auflösen.</li>
+            <li>Auth-Middleware: kein Login → Redirect zur WSC-Login-Seite mit Rücksprung.</li>
+            <li>WSC-Benutzer (read-only) + Benutzergruppen für die Autorisierung laden.</li>
+            <li>Privat-<code>owner</code> automatisch mit <code>wcf_user_id</code> verknüpfen/anlegen.</li>
           </ul>
         </div>
       </article>
@@ -137,6 +151,7 @@
         <li><a href="konzept.html">Konzept</a></li>
         <li><a href="datenmodell.html">Datenmodell</a></li>
         <li><a href="architektur.html">Architektur</a></li>
+        <li><a href="integration.html">Integration</a></li>
         <li><a href="roadmap.html">Roadmap</a></li>
       </ol>
       <div class="footerNote">

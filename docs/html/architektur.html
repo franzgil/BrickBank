@@ -27,6 +27,7 @@
         <li><a href="konzept.html">Konzept</a></li>
         <li><a href="datenmodell.html">Datenmodell</a></li>
         <li class="active"><a href="architektur.html">Architektur</a></li>
+        <li><a href="integration.html">Integration</a></li>
         <li><a href="roadmap.html">Roadmap</a></li>
       </ul>
     </div>
@@ -41,31 +42,53 @@
       </div>
 
       <article class="contentBox">
-        <div class="contentBoxHeader"><span class="icon"></span>Technologie-Entscheidung</div>
+        <div class="contentBoxHeader"><span class="icon"></span>Grundsatz</div>
         <div class="contentBoxBody">
-          <p>BrickBank wird als klassische <strong>server-gerenderte Web-Anwendung</strong> umgesetzt:</p>
-          <table>
-            <thead><tr><th>Schicht</th><th>Technologie</th></tr></thead>
-            <tbody>
-              <tr><td>Frontend</td><td><strong>HTML</strong> (server-gerendert), CSS, dezentes Vanilla-JavaScript</td></tr>
-              <tr><td>Backend</td><td><strong>PHP 7</strong></td></tr>
-              <tr><td>Datenbank</td><td><strong>MySQL</strong> (InnoDB, utf8mb4)</td></tr>
-            </tbody>
-          </table>
-          <p>Diese Wahl ist bewusst pragmatisch: weit verbreitet, günstig zu hosten
-             (Standard-LAMP-Hosting genügt), niedrige Einstiegshürde für Mitwirkende und
-             robust für ein Inventar-Tool ohne hohe Interaktivitäts-Anforderungen.</p>
+          <p>BrickBank ist eine <strong>eigenständige Web-Anwendung im MVC-Muster</strong>
+             (eigener, schlanker Code), die <strong>technisch an die AFOL.lu WoltLab Suite 5.5
+             (WSC)</strong> gekoppelt ist:</p>
+          <ul>
+            <li><strong>Eigenes MVC</strong> — eigene Controller, Models und Views; keine Abhängigkeit vom WSC-Framework im Code.</li>
+            <li><strong>WSC-Kopplung über SSO</strong> — Login, Session und Benutzeridentität kommen von WoltLab. Details: <a href="integration.html">Integration</a>.</li>
+          </ul>
         </div>
       </article>
 
       <article class="contentBox">
-        <div class="contentBoxHeader"><span class="icon"></span>Grundprinzipien</div>
+        <div class="contentBoxHeader"><span class="icon"></span>Technologie</div>
         <div class="contentBoxBody">
+          <table>
+            <thead><tr><th>Schicht</th><th>Technologie</th></tr></thead>
+            <tbody>
+              <tr><td>Frontend</td><td><strong>HTML</strong> (server-gerendert), CSS, dezentes Vanilla-JavaScript</td></tr>
+              <tr><td>Backend</td><td><strong>PHP 7.2+</strong> (kompatibel mit der WSC-5.5-Umgebung, läuft auch unter PHP 8.x)</td></tr>
+              <tr><td>Datenbank</td><td><strong>MySQL</strong> (InnoDB, utf8mb4) — eigene BrickBank-Tabellen</td></tr>
+              <tr><td>Auth/Identität</td><td><strong>WoltLab Suite 5.5</strong> (read-only, via SSO)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="contentBox">
+        <div class="contentBoxHeader"><span class="icon"></span>MVC-Aufbau</div>
+        <div class="contentBoxBody">
+          <pre><code>        ┌─────────────┐      ┌──────────────┐      ┌────────────┐
+HTTP ─▶ │  Controller │ ───▶ │    Model     │ ───▶ │   MySQL    │
+        │ (Logik je   │      │ (Entities +  │      │ (BrickBank │
+        │  Use Case)  │ ◀─── │  Repository) │ ◀─── │  Tabellen) │
+        └──────┬──────┘      └──────────────┘      └────────────┘
+               │
+               ▼
+        ┌─────────────┐
+        │    View     │ ──▶ HTML an den Browser
+        │ (Templates) │
+        └─────────────┘</code></pre>
           <ul>
-            <li><strong>PDO statt mysqli</strong> für DB-Zugriff — Prepared Statements gegen SQL-Injection.</li>
-            <li><strong>Trennung von Logik und Darstellung</strong> — schlanke Templates, separate Datenzugriffs-Schicht.</li>
-            <li><strong>utf8mb4</strong> durchgängig (Namen, Farben in mehreren Sprachen).</li>
-            <li><strong>Keine Secrets im Repo</strong> — DB-Zugangsdaten über Konfigurationsdatei außerhalb der Versionskontrolle.</li>
+            <li><strong>Model</strong> — Entitäten (Owner, Location, Part, Color, Element, InventoryItem) plus Repositories, die den DB-Zugriff kapseln. Enthält die Domänenlogik.</li>
+            <li><strong>View</strong> — reine Darstellung; HTML-Templates ohne Geschäftslogik.</li>
+            <li><strong>Controller</strong> — nimmt die Anfrage entgegen, ruft Models, wählt die View.</li>
+            <li><strong>Front-Controller + Router</strong> — <code>public/index.php</code> leitet jede Anfrage an den passenden Controller (saubere URLs via <code>.htaccess</code>).</li>
+            <li><strong>Auth-Middleware</strong> — vor jedem geschützten Controller prüft die WSC-Anbindung den Login (siehe <a href="integration.html">Integration</a>).</li>
           </ul>
         </div>
       </article>
@@ -74,35 +97,49 @@
         <div class="contentBoxHeader"><span class="icon"></span>Vorgeschlagene Projektstruktur</div>
         <div class="contentBoxBody">
           <pre><code>brickbank/
-├── public/                 # Web-Root (DocumentRoot zeigt hierhin)
-│   ├── index.php           # Front-Controller / Routing
-│   ├── assets/             # CSS, JS, Bilder
-│   └── .htaccess           # Rewrites, schützt Nicht-Public-Pfade
-├── src/
-│   ├── Database.php        # PDO-Verbindung (Singleton/Factory)
-│   ├── Repository/         # DB-Zugriff je Entität (OwnerRepository, ...)
-│   ├── Controller/         # Anwendungslogik je Anwendungsfall
-│   └── helpers.php         # gemeinsame Funktionen (escape, redirect, ...)
-├── templates/              # HTML-Templates (Listen, Formulare)
-├── sql/
-│   ├── schema.sql          # Tabellen (siehe Datenmodell)
-│   └── seed.sql            # Beispiel-Stammdaten (Farben etc.)
+├── public/                     # Web-Root (DocumentRoot zeigt hierhin)
+│   ├── index.php               # Front-Controller / Routing-Einstieg
+│   ├── assets/                 # CSS, JS, Bilder (afol.lu-Design)
+│   └── .htaccess               # Rewrites → index.php
+├── app/
+│   ├── Core/                   # Router, Request, Response, Controller-Basis, View-Renderer
+│   ├── Controller/             # ein Controller je Use Case (InventoryController, ...)
+│   ├── Model/                  # Entities + Repositories (DB-Zugriff, Domänenlogik)
+│   ├── View/                   # Templates (Listen, Formulare)
+│   └── Integration/            # WoltLab-Anbindung (WcfSession, WcfUser) — gekapselt
 ├── config/
-│   └── config.example.php  # Vorlage; echte config.php ist .gitignore'd
+│   └── config.example.php      # Vorlage; echte config.php ist .gitignore'd
+├── sql/
+│   ├── schema.sql              # BrickBank-Tabellen (siehe Datenmodell)
+│   └── seed.sql                # Stammdaten (Farben etc.)
 └── docs/</code></pre>
+        </div>
+      </article>
+
+      <article class="contentBox">
+        <div class="contentBoxHeader"><span class="icon"></span>Grundprinzipien</div>
+        <div class="contentBoxBody">
+          <ul>
+            <li><strong>PDO</strong> für DB-Zugriff — Prepared Statements gegen SQL-Injection.</li>
+            <li><strong>Trennung der Schichten</strong> — Controller enthalten kein SQL, Views keine Logik.</li>
+            <li><strong>WSC-Anbindung gekapselt</strong> — alle WoltLab-Zugriffe ausschließlich im <code>Integration/</code>-Layer, damit WSC-Updates nur an einer Stelle nachgezogen werden.</li>
+            <li><strong>Keine Passwörter in BrickBank</strong> — Authentifizierung gehört vollständig WoltLab.</li>
+            <li><strong>utf8mb4</strong> durchgängig; <strong>Secrets</strong> (DB- und WSC-Zugang) nie ins Repo.</li>
+          </ul>
         </div>
       </article>
 
       <article class="contentBox">
         <div class="contentBoxHeader"><span class="icon"></span>Anfrage-Ablauf</div>
         <div class="contentBoxBody">
-          <pre><code>Browser ──HTTP──▶ public/index.php (Front-Controller)
-                        │  ermittelt Route
-                        ▼
-                   Controller  ──▶  Repository  ──PDO──▶  MySQL
-                        │
-                        ▼
-                   Template (HTML)  ──▶  Browser</code></pre>
+          <pre><code>Browser ──▶ public/index.php (Front-Controller)
+                │ 1. Router ermittelt Controller/Action
+                │ 2. Auth-Middleware → Integration/WcfSession (SSO-Prüfung)
+                ▼
+           Controller ──▶ Model/Repository ──PDO──▶ MySQL (BrickBank)
+                │
+                ▼
+           View (Template, afol.lu-Design) ──▶ Browser</code></pre>
         </div>
       </article>
 
@@ -111,15 +148,16 @@
         <div class="contentBoxBody">
           <ul>
             <li><strong>Prepared Statements</strong> für jede Abfrage mit Nutzereingaben.</li>
-            <li><strong>Output-Escaping</strong> (<code>htmlspecialchars</code>) bei jeder Ausgabe in HTML.</li>
-            <li><strong>CSRF-Token</strong> für alle Formulare, die Daten ändern.</li>
-            <li><strong>Eingabevalidierung</strong> serverseitig (Mengen ≥ 0, Pflichtfelder, Fremdschlüssel).</li>
+            <li><strong>Output-Escaping</strong> (<code>htmlspecialchars</code>) bei jeder HTML-Ausgabe.</li>
+            <li><strong>CSRF-Token</strong> für alle datenändernden Formulare.</li>
+            <li><strong>Serverseitige Validierung</strong> (Mengen ≥ 0, Pflichtfelder, Fremdschlüssel).</li>
+            <li><strong>WSC-Datenbank nur lesend</strong> — BrickBank schreibt nie in WoltLab-Tabellen.</li>
             <li><strong>Konfiguration getrennt</strong> von Code; <code>config.php</code> nie committen.</li>
           </ul>
           <h3>Bewusst offen gelassen</h3>
           <ul>
-            <li>Authentifizierung/Rollen: zunächst minimal, Ausbau zu Mitglieder-Accounts später.</li>
             <li>Externe Katalog-Importe (BrickLink o.&nbsp;ä.) erst nach dem MVP.</li>
+            <li>Eigene Rollen über die WSC-Gruppen hinaus (vorerst genügen WSC-Benutzergruppen).</li>
           </ul>
         </div>
       </article>
@@ -133,6 +171,7 @@
         <li><a href="konzept.html">Konzept</a></li>
         <li><a href="datenmodell.html">Datenmodell</a></li>
         <li><a href="architektur.html">Architektur</a></li>
+        <li><a href="integration.html">Integration</a></li>
         <li><a href="roadmap.html">Roadmap</a></li>
       </ol>
       <div class="footerNote">

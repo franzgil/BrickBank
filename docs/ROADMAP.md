@@ -4,14 +4,21 @@ Schrittweise Umsetzung — vom kleinsten nutzbaren Stand (MVP) zum Ausbau.
 Jede Phase ist für sich genommen lauffähig und liefert Mehrwert.
 
 ## Phase 0 — Konzept & Planung ✅ (aktuell)
-- README, Konzept, Datenmodell, Architektur dokumentiert.
-- Technologie festgelegt: HTML + PHP 7 + MySQL.
+- README, Konzept, Datenmodell, Architektur, Integration dokumentiert.
+- Technologie festgelegt: eigenständige **MVC-App** (PHP/MySQL), gekoppelt an
+  **WoltLab Suite 5.5** per **SSO**.
 
-## Phase 1 — Grundgerüst & Datenbank
-- Projektstruktur anlegen (`public/`, `src/`, `templates/`, `sql/`, `config/`).
+## Phase 1 — MVC-Grundgerüst & Datenbank
+- Projektstruktur anlegen (`public/`, `app/Core|Controller|Model|View|Integration`, `sql/`, `config/`).
+- Front-Controller + Router + Controller-Basisklasse + View-Renderer (MVC-Kern).
 - `sql/schema.sql` umsetzen (Tabellen aus [DATENMODELL.md](DATENMODELL.md)).
-- PDO-Verbindung (`src/Database.php`) + Konfigurationsvorlage.
-- Front-Controller mit einfachem Routing, „Hello BrickBank“-Seite.
+- PDO-Verbindung + Konfigurationsvorlage; „Hello BrickBank“-Seite im afol.lu-Design.
+
+## Phase 1b — WoltLab-SSO-Anbindung
+- `Integration/`-Layer: WSC-Session-Cookie lesen, Session/`userID` auflösen.
+- Auth-Middleware: kein Login → Redirect zur WSC-Login-Seite mit Rücksprung.
+- WSC-Benutzer (read-only) + Benutzergruppen für die Autorisierung laden.
+- Privat-`owner` automatisch mit `wcf_user_id` verknüpfen/anlegen.
 
 ## Phase 2 — Stammdaten pflegen
 - CRUD für **Besitzer** (Verein/Privat).

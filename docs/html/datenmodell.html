@@ -27,6 +27,7 @@
         <li><a href="konzept.html">Konzept</a></li>
         <li class="active"><a href="datenmodell.html">Datenmodell</a></li>
         <li><a href="architektur.html">Architektur</a></li>
+        <li><a href="integration.html">Integration</a></li>
         <li><a href="roadmap.html">Roadmap</a></li>
       </ul>
     </div>
@@ -64,12 +65,15 @@
         <div class="contentBoxHeader"><span class="icon"></span>Tabellen</div>
         <div class="contentBoxBody">
           <h3>owner — Besitzer</h3>
-          <p>Ein Besitzer ist entweder der Verein oder ein einzelnes Mitglied.</p>
+          <p>Ein Besitzer ist entweder der Verein oder ein einzelnes Mitglied. Privatbesitzer
+             sind über die WoltLab-<code>userID</code> mit einem Forumsmitglied verknüpft
+             (SSO, siehe <a href="integration.html">Integration</a>).</p>
           <table>
             <thead><tr><th>Spalte</th><th>Typ</th><th>Beschreibung</th></tr></thead>
             <tbody>
               <tr><td><code>id</code></td><td>INT, PK, AUTO_INCREMENT</td><td></td></tr>
               <tr><td><code>type</code></td><td>ENUM('verein','privat')</td><td>Vereins- oder Privatbestand</td></tr>
+              <tr><td><code>wcf_user_id</code></td><td>INT, NULL</td><td>logische Referenz auf <code>wcf1_user.userID</code> (nur bei <code>type='privat'</code>)</td></tr>
               <tr><td><code>name</code></td><td>VARCHAR(120)</td><td>Anzeigename (z.&nbsp;B. „afol.lu“ oder Mitgliedsname)</td></tr>
               <tr><td><code>email</code></td><td>VARCHAR(190), NULL</td><td>optional, für Mitglieder</td></tr>
               <tr><td><code>created_at</code></td><td>DATETIME</td><td></td></tr>
@@ -160,9 +164,11 @@
           <pre><code>CREATE TABLE owner (
   id INT AUTO_INCREMENT PRIMARY KEY,
   type ENUM('verein','privat') NOT NULL,
+  wcf_user_id INT NULL,          -- logische Referenz auf wcf1_user.userID (SSO)
   name VARCHAR(120) NOT NULL,
   email VARCHAR(190) NULL,
-  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  KEY idx_wcf_user (wcf_user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE location (
@@ -221,6 +227,7 @@ CREATE TABLE inventory_item (
         <li><a href="konzept.html">Konzept</a></li>
         <li><a href="datenmodell.html">Datenmodell</a></li>
         <li><a href="architektur.html">Architektur</a></li>
+        <li><a href="integration.html">Integration</a></li>
         <li><a href="roadmap.html">Roadmap</a></li>
       </ol>
       <div class="footerNote">

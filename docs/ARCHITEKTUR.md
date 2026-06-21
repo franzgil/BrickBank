@@ -1,72 +1,104 @@
 # Architektur
 
-## Technologie-Entscheidung
+## Grundsatz
 
-BrickBank wird als klassische **server-gerenderte Web-Anwendung** umgesetzt:
+BrickBank ist eine **eigenständige Web-Anwendung im MVC-Muster** (eigener,
+schlanker Code), die **technisch an die AFOL.lu WoltLab Suite 5.5 (WSC)
+gekoppelt** ist:
+
+- **Eigenes MVC** — eigene Controller, Models und Views; keine Abhängigkeit vom
+  WSC-Framework im Code selbst.
+- **WSC-Kopplung über SSO** — Login, Session und Benutzeridentität kommen von
+  WoltLab (Single Sign-on). Details siehe [INTEGRATION.md](INTEGRATION.md).
+
+## Technologie
 
 | Schicht | Technologie |
 |---------|-------------|
 | Frontend | **HTML** (server-gerendert), CSS, dezentes Vanilla-JavaScript |
-| Backend | **PHP 7** |
-| Datenbank | **MySQL** (InnoDB, utf8mb4) |
+| Backend | **PHP 7.2+** (kompatibel mit der WSC-5.5-Umgebung, läuft auch unter PHP 8.x) |
+| Datenbank | **MySQL** (InnoDB, utf8mb4) — eigene BrickBank-Tabellen |
+| Auth/Identität | **WoltLab Suite 5.5** (read-only, via SSO) |
 
-Diese Wahl ist bewusst pragmatisch: weit verbreitet, günstig zu hosten
-(Standard-LAMP-Hosting genügt), niedrige Einstiegshürde für Mitwirkende und
-robust für ein Inventar-Tool ohne hohe Interaktivitäts-Anforderungen.
+## MVC-Aufbau
 
-## Grundprinzipien
+```
+        ┌─────────────┐      ┌──────────────┐      ┌────────────┐
+HTTP ─▶ │  Controller │ ───▶ │    Model     │ ───▶ │   MySQL    │
+        │ (Logik je   │      │ (Entities +  │      │ (BrickBank │
+        │  Use Case)  │ ◀─── │  Repository) │ ◀─── │  Tabellen) │
+        └──────┬──────┘      └──────────────┘      └────────────┘
+               │
+               ▼
+        ┌─────────────┐
+        │    View     │ ──▶ HTML an den Browser
+        │ (Templates) │
+        └─────────────┘
+```
 
-- **PDO statt mysqli** für DB-Zugriff — Prepared Statements gegen SQL-Injection.
-- **Trennung von Logik und Darstellung** — kein SQL/PHP-Logik mitten im HTML;
-  schlanke Templates, separate Datenzugriffs-Schicht.
-- **utf8mb4** durchgängig (Namen, Farben in mehreren Sprachen).
-- **Keine Secrets im Repo** — DB-Zugangsdaten über Konfigurationsdatei außerhalb
-  der Versionskontrolle bzw. Umgebungsvariablen.
+- **Model** — Entitäten (Owner, Location, Part, Color, Element, InventoryItem)
+  plus Repositories, die den DB-Zugriff kapseln. Enthält die Domänenlogik.
+- **View** — reine Darstellung; HTML-Templates ohne Geschäftslogik.
+- **Controller** — nimmt die Anfrage entgegen, ruft Models, wählt die View.
+- **Front-Controller + Router** — `public/index.php` leitet jede Anfrage an den
+  passenden Controller (saubere URLs via `.htaccess`).
+- **Auth-Middleware** — vor jedem geschützten Controller prüft die
+  WSC-Anbindung den Login (siehe Integration).
 
 ## Vorgeschlagene Projektstruktur
 
 ```
 brickbank/
-├── public/                 # Web-Root (DocumentRoot zeigt hierhin)
-│   ├── index.php           # Front-Controller / Routing
-│   ├── assets/             # CSS, JS, Bilder
-│   └── .htaccess           # Rewrites, schützt Nicht-Public-Pfade
-├── src/
-│   ├── Database.php        # PDO-Verbindung (Singleton/Factory)
-│   ├── Repository/         # DB-Zugriff je Entität (OwnerRepository, ...)
-│   ├── Controller/         # Anwendungslogik je Anwendungsfall
-│   └── helpers.php         # gemeinsame Funktionen (escape, redirect, ...)
-├── templates/              # HTML-Templates (Listen, Formulare)
-├── sql/
-│   ├── schema.sql          # Tabellen (siehe DATENMODELL.md)
-│   └── seed.sql            # Beispiel-Stammdaten (Farben etc.)
+├── public/                     # Web-Root (DocumentRoot zeigt hierhin)
+│   ├── index.php               # Front-Controller / Routing-Einstieg
+│   ├── assets/                 # CSS, JS, Bilder (afol.lu-Design)
+│   └── .htaccess               # Rewrites → index.php
+├── app/
+│   ├── Core/                   # Router, Request, Response, Controller-Basis, View-Renderer
+│   ├── Controller/             # ein Controller je Use Case (InventoryController, ...)
+│   ├── Model/                  # Entities + Repositories (DB-Zugriff, Domänenlogik)
+│   ├── View/                   # Templates (Listen, Formulare)
+│   └── Integration/            # WoltLab-Anbindung (WcfSession, WcfUser) — gekapselt
 ├── config/
-│   └── config.example.php  # Vorlage; echte config.php ist .gitignore'd
+│   └── config.example.php      # Vorlage; echte config.php ist .gitignore'd
+├── sql/
+│   ├── schema.sql              # BrickBank-Tabellen (siehe DATENMODELL.md)
+│   └── seed.sql                # Stammdaten (Farben etc.)
 └── docs/
 ```
 
-## Anfrage-Ablauf (vereinfacht)
+## Grundprinzipien
+
+- **PDO** für DB-Zugriff — Prepared Statements gegen SQL-Injection.
+- **Trennung der Schichten** — Controller enthalten kein SQL, Views keine Logik.
+- **WSC-Anbindung gekapselt** — alle WoltLab-Zugriffe ausschließlich im
+  `Integration/`-Layer, damit WSC-Updates nur an einer Stelle nachgezogen werden.
+- **Keine Passwörter in BrickBank** — Authentifizierung gehört vollständig WoltLab.
+- **utf8mb4** durchgängig; **Secrets** (DB- und WSC-Zugang) nie ins Repo.
+
+## Anfrage-Ablauf
 
 ```
-Browser ──HTTP──▶ public/index.php (Front-Controller)
-                        │  ermittelt Route
-                        ▼
-                   Controller  ──▶  Repository  ──PDO──▶  MySQL
-                        │
-                        ▼
-                   Template (HTML)  ──▶  Browser
+Browser ──▶ public/index.php (Front-Controller)
+                │ 1. Router ermittelt Controller/Action
+                │ 2. Auth-Middleware → Integration/WcfSession (SSO-Prüfung)
+                ▼
+           Controller ──▶ Model/Repository ──PDO──▶ MySQL (BrickBank)
+                │
+                ▼
+           View (Template, afol.lu-Design) ──▶ Browser
 ```
 
 ## Sicherheits-Leitplanken
 
 - **Prepared Statements** für jede Abfrage mit Nutzereingaben.
-- **Output-Escaping** (`htmlspecialchars`) bei jeder Ausgabe in HTML.
-- **CSRF-Token** für alle Formulare, die Daten ändern.
-- **Eingabevalidierung** serverseitig (Mengen ≥ 0, Pflichtfelder, Fremdschlüssel).
+- **Output-Escaping** (`htmlspecialchars`) bei jeder HTML-Ausgabe.
+- **CSRF-Token** für alle datenändernden Formulare.
+- **Serverseitige Validierung** (Mengen ≥ 0, Pflichtfelder, Fremdschlüssel).
+- **WSC-Datenbank nur lesend** — BrickBank schreibt nie in WoltLab-Tabellen.
 - **Konfiguration getrennt** von Code; `config.php` nie committen.
 
 ## Bewusst offen gelassen
 
-- Authentifizierung/Rollen: zunächst minimal (z. B. ein gemeinsamer Login),
-  Ausbau zu Mitglieder-Accounts in einer späteren Phase (siehe ROADMAP).
 - Externe Katalog-Importe (BrickLink o. ä.) erst nach dem MVP.
+- Eigene Rollen über die WSC-Gruppen hinaus (vorerst genügen WSC-Benutzergruppen).

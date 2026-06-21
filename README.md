@@ -11,8 +11,12 @@ als auch **Privatbestände** einzelner Mitglieder verwaltet — klar getrennt,
 aber im selben System durchsuchbar.
 
 > ⚠️ **Status: Planungs-/Konzeptphase.** Dieses Repository enthält aktuell nur
-> Dokumentation. Es wurde noch keine Entscheidung über die endgültige
-> Technologie getroffen — siehe [`docs/ARCHITEKTUR.md`](docs/ARCHITEKTUR.md).
+> Dokumentation.
+>
+> **Technologie:** eigenständige **MVC-App** in PHP/MySQL, technisch gekoppelt an
+> die **AFOL.lu WoltLab Suite 5.5** per **Single Sign-on** (Login & Identität
+> kommen von WoltLab). Siehe [`docs/ARCHITEKTUR.md`](docs/ARCHITEKTUR.md) und
+> [`docs/INTEGRATION.md`](docs/INTEGRATION.md).
 
 ---
 
@@ -31,7 +35,8 @@ aber im selben System durchsuchbar.
 |----------|--------|
 | [`docs/KONZEPT.md`](docs/KONZEPT.md) | Domäne, Anwendungsfälle, Begriffe |
 | [`docs/DATENMODELL.md`](docs/DATENMODELL.md) | Entitäten und ihre Beziehungen |
-| [`docs/ARCHITEKTUR.md`](docs/ARCHITEKTUR.md) | Technische Optionen & Vorschlag |
+| [`docs/ARCHITEKTUR.md`](docs/ARCHITEKTUR.md) | MVC-Aufbau, Projektstruktur, Sicherheit |
+| [`docs/INTEGRATION.md`](docs/INTEGRATION.md) | WoltLab-Suite-5.5-Kopplung (SSO) |
 | [`docs/ROADMAP.md`](docs/ROADMAP.md) | Schrittweise Umsetzung (MVP → Ausbau) |
 
 > 🖥️ **HTML-Version** der Dokumentation (im afol.lu-Look): [`docs/html/index.html`](docs/html/index.html)

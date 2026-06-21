@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Integration (WoltLab SSO) — BrickBank | afol.lu</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+  <header class="pageHeader">
+    <div class="pageHeaderInner">
+      <a class="pageHeaderLogo" href="index.html">
+        <img class="logoImg" src="assets/afol-logo.png" alt="AFOL.lu">
+        <span class="pageHeaderTitle">
+          <span class="siteTitle">BrickBank</span>
+          <span class="siteSubtitle">afol.lu · Inventar-System</span>
+        </span>
+      </a>
+    </div>
+  </header>
+
+  <nav class="mainMenu">
+    <div class="mainMenuInner">
+      <ul class="mainMenuList">
+        <li><a href="index.html">Start</a></li>
+        <li><a href="konzept.html">Konzept</a></li>
+        <li><a href="datenmodell.html">Datenmodell</a></li>
+        <li><a href="architektur.html">Architektur</a></li>
+        <li class="active"><a href="integration.html">Integration</a></li>
+        <li><a href="roadmap.html">Roadmap</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="pageWrapper">
+    <main>
+      <div class="breadcrumbs">
+        <a href="index.html">BrickBank</a>
+        <span class="sep">›</span>
+        <span>Integration (WoltLab SSO)</span>
+      </div>
+
+      <article class="contentBox">
+        <div class="contentBoxHeader"><span class="icon"></span>WoltLab Suite 5.5 — Single Sign-on</div>
+        <div class="contentBoxBody">
+          <p>BrickBank ist eine eigenständige App, <strong>delegiert Login und Identität aber an
+             WoltLab Suite 5.5 (WSC)</strong>. Mitglieder melden sich einmal im afol.lu-Forum an
+             und sind damit auch in BrickBank angemeldet.</p>
+          <div class="eligibilityNote">
+            <strong>Hinweis zu Versionsdetails:</strong> Exakte Tabellen-, Spalten- und Cookie-Namen
+            (z.&nbsp;B. Tabellen-Präfix <code>wcf1_</code>, Cookie-Präfix) hängen von der konkreten
+            Installation ab und können sich zwischen WSC-Versionen ändern. Die hier genannten Namen sind
+            WSC-typisch und <strong>vor der Umsetzung an der laufenden 5.5-Instanz zu verifizieren</strong>.
+            Die gesamte Anbindung wird im <code>Integration/</code>-Layer gekapselt.
+          </div>
+        </div>
+      </article>
+
+      <article class="contentBox">
+        <div class="contentBoxHeader"><span class="icon"></span>Voraussetzungen</div>
+        <div class="contentBoxBody">
+          <ul>
+            <li><strong>Gemeinsame Domain</strong> — BrickBank läuft unter derselben Domain wie das Forum
+                (z.&nbsp;B. <code>brickbank.afol.lu</code> oder <code>afol.lu/brickbank</code>),
+                damit die WSC-Session-Cookies lesbar sind.</li>
+            <li><strong>Lesezugriff auf die WSC-Datenbank</strong> — ein DB-Benutzer mit
+                <strong>nur lesenden</strong> Rechten auf die relevanten <code>wcf1_*</code>-Tabellen.</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="contentBox">
+        <div class="contentBoxHeader"><span class="icon"></span>Authentifizierung (SSO-Ablauf)</div>
+        <div class="contentBoxBody">
+          <pre><code>1. Anfrage an BrickBank
+        │
+        ▼
+2. Integration/WcfSession liest das WSC-Session-Cookie
+        │
+        ▼
+3. Auflösung der Session in der WSC-DB  →  userID
+        │
+   ┌────┴─────────────────────────┐
+   ▼                              ▼
+4a. gültiger Login            4b. kein/abgelaufener Login
+    → userID, Gruppen             → Redirect zur WSC-Login-Seite
+      geladen, weiter               mit Rücksprung-URL (?url=…)</code></pre>
+          <ul>
+            <li>BrickBank <strong>speichert keine Passwörter</strong> und legt keine eigenen Logins an.</li>
+            <li>Die Session-/Cookie-Prüfung erfolgt gegen die WSC-Datenbank (Tabelle <code>wcf1_user</code> bzw. Session-Tabelle der 5.5-Instanz).</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="contentBox">
+        <div class="contentBoxHeader"><span class="icon"></span>Benutzerdaten (read-only)</div>
+        <div class="contentBoxBody">
+          <table>
+            <thead><tr><th>Feld</th><th>Quelle (WSC)</th><th>Verwendung in BrickBank</th></tr></thead>
+            <tbody>
+              <tr><td><code>userID</code></td><td><code>wcf1_user</code></td><td>stabile Verknüpfung zum Mitglied</td></tr>
+              <tr><td><code>username</code></td><td><code>wcf1_user</code></td><td>Anzeige (z.&nbsp;B. „erfasst von …“)</td></tr>
+              <tr><td><code>email</code></td><td><code>wcf1_user</code></td><td>optionale Kontaktanzeige</td></tr>
+              <tr><td>Benutzergruppen</td><td><code>wcf1_user_to_group</code></td><td>Autorisierung (siehe unten)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="contentBox">
+        <div class="contentBoxHeader"><span class="icon"></span>Autorisierung</div>
+        <div class="contentBoxBody">
+          <ul>
+            <li>Der Zugang wird über <strong>WSC-Benutzergruppen</strong> gesteuert
+                (z.&nbsp;B. nur Mitglieder der Gruppe „Aktiv“/„Mitglieder“ dürfen Bestände bearbeiten).</li>
+            <li>Welche Gruppe welche Aktion darf, wird in der BrickBank-Konfiguration auf
+                WSC-Gruppen-IDs abgebildet — die Rechtevergabe im Forum bleibt die einzige Quelle der Wahrheit.</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="contentBox">
+        <div class="contentBoxHeader"><span class="icon"></span>Verknüpfung mit dem Datenmodell</div>
+        <div class="contentBoxBody">
+          <p>Privatbestände gehören einem konkreten Forumsmitglied. Dazu trägt die BrickBank-Tabelle
+             <code>owner</code> für <code>type = 'privat'</code> die WSC-<code>userID</code>:</p>
+          <ul>
+            <li><code>owner.wcf_user_id</code> → logische Referenz auf <code>wcf1_user.userID</code>
+                (kein erzwungener Fremdschlüssel, da andere Tabelle/DB).</li>
+          </ul>
+          <p>So lässt sich beim Login automatisch der passende Privat-Besitzer finden bzw. beim ersten Zugriff anlegen.</p>
+        </div>
+      </article>
+
+      <article class="contentBox">
+        <div class="contentBoxHeader"><span class="icon"></span>Design-Kopplung</div>
+        <div class="contentBoxBody">
+          <ul>
+            <li>BrickBank übernimmt <strong>Header, Footer und Stil</strong> der WoltLab-Optik (das aktuelle afol.lu-Design in <code>public/assets/</code> bildet das nach).</li>
+            <li>Optionaler Ausbau: echte WSC-Templates/Style serverseitig einbinden, damit Stiländerungen im Forum automatisch übernommen werden.</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="contentBox">
+        <div class="contentBoxHeader"><span class="icon"></span>Wartung &amp; Sicherheit</div>
+        <div class="contentBoxBody">
+          <ul>
+            <li><strong>Nur lesende</strong> Zugriffe auf WSC-Tabellen — niemals schreiben.</li>
+            <li>WSC-Updates können Session-Mechanik oder Schema ändern → Anbindung bleibt im <code>Integration/</code>-Layer isoliert und ist dort gezielt anpassbar.</li>
+            <li>Zugangsdaten (WSC-DB, Cookie-/Präfix-Konfiguration) liegen in <code>config.php</code> außerhalb der Versionskontrolle.</li>
+          </ul>
+        </div>
+      </article>
+    </main>
+  </div>
+
+  <footer class="pageFooter">
+    <div class="pageFooterInner">
+      <ol>
+        <li><a href="index.html">Start</a></li>
+        <li><a href="konzept.html">Konzept</a></li>
+        <li><a href="datenmodell.html">Datenmodell</a></li>
+        <li><a href="architektur.html">Architektur</a></li>
+        <li><a href="integration.html">Integration</a></li>
+        <li><a href="roadmap.html">Roadmap</a></li>
+      </ol>
+      <div class="footerNote">
+        BrickBank · ein Projekt der <a href="https://afol55.afol.lu/">AFOL.lu a.s.b.l.</a>
+        (Adult Fans of LEGO Luxembourg). LEGO® ist eine Marke der LEGO Group, die dieses Projekt
+        weder sponsert noch autorisiert oder unterstützt.
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

@@ -24,12 +24,15 @@ owner (Besitzer)            location (Lagerort, hierarchisch)
 ## Tabellen
 
 ### `owner` — Besitzer
-Ein Besitzer ist entweder der Verein oder ein einzelnes Mitglied.
+Ein Besitzer ist entweder der Verein oder ein einzelnes Mitglied. Privatbesitzer
+sind über die WoltLab-`userID` mit einem Forumsmitglied verknüpft (SSO, siehe
+[INTEGRATION.md](INTEGRATION.md)).
 
 | Spalte | Typ | Beschreibung |
 |--------|-----|--------------|
 | `id` | INT, PK, AUTO_INCREMENT | |
 | `type` | ENUM('verein','privat') | Vereins- oder Privatbestand |
+| `wcf_user_id` | INT, NULL | logische Referenz auf `wcf1_user.userID` (nur bei `type='privat'`) |
 | `name` | VARCHAR(120) | Anzeigename (z. B. „afol.lu“ oder Mitgliedsname) |
 | `email` | VARCHAR(190), NULL | optional, für Mitglieder |
 | `created_at` | DATETIME | |
@@ -102,9 +105,11 @@ Das Herzstück: „**Menge** eines **Elements** an einem **Ort**, das einem
 CREATE TABLE owner (
   id INT AUTO_INCREMENT PRIMARY KEY,
   type ENUM('verein','privat') NOT NULL,
+  wcf_user_id INT NULL,          -- logische Referenz auf wcf1_user.userID (SSO)
   name VARCHAR(120) NOT NULL,
   email VARCHAR(190) NULL,
-  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  KEY idx_wcf_user (wcf_user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE location (
