@@ -43,6 +43,31 @@ aber im selben System durchsuchbar.
 > — lokal im Browser öffnen. Markenfarben/Logo/Schrift sind zentral in
 > [`docs/html/assets/style.css`](docs/html/assets/style.css) (CSS-Variablen unter `:root`) anpassbar.
 
+## Installation & Betrieb
+
+Voraussetzungen: PHP 7.2+ (getestet bis 8.x), MySQL, Apache mit `mod_rewrite`.
+
+```bash
+# 1. Konfiguration anlegen und ausfüllen (DB + WoltLab-SSO)
+cp config/config.example.php config/config.php
+
+# 2. Datenbank einrichten (Reihenfolge siehe sql/README.md)
+mysql brickbank < sql/schema.sql
+mysql brickbank < sql/migrations/001_module_behaelter_inventur.sql
+mysql brickbank < sql/seed.sql        # optional
+
+# 3. Webserver-DocumentRoot auf public/ zeigen lassen
+#    (lokal zum Testen:)
+php -S 127.0.0.1:8000 -t public public/index.php
+```
+
+- **Struktur:** `public/` (Front-Controller), `app/` (MVC: Core/Controller/Model/View/
+  Integration/Service), `sql/`, `config/`, `docs/`.
+- **WoltLab-SSO:** Tabellen-/Cookie-Namen in `config/config.php` an die laufende
+  WSC-5.5-Instanz anpassen (siehe [`docs/INTEGRATION.md`](docs/INTEGRATION.md)).
+- **QR (optional serverseitig):** `phpqrcode` unter `vendor/phpqrcode/qrlib.php`
+  ablegen; ohne die Bibliothek werden QR-Codes clientseitig im Browser erzeugt.
+
 ## Mitmachen
 
 Dieses Projekt entsteht für und mit der afol.lu Community. Vorschläge,

@@ -20,6 +20,15 @@ Jede Phase ist für sich genommen lauffähig und liefert Mehrwert.
 - WSC-Benutzer (read-only) + Benutzergruppen für die Autorisierung laden.
 - Privat-`owner` automatisch mit `wcf_user_id` verknüpfen/anlegen.
 
+## Modul Behälter/Etiketten/Inventur ✅ umgesetzt
+Eigenständig lauffähiges Modul (siehe [MODUL-BEHAELTER-INVENTUR.md](MODUL-BEHAELTER-INVENTUR.md)):
+- MVC-Fundament (Router, PDO, View, CSRF, WSC-SSO-Layer).
+- Schema-Migration 001 (Behälter als `location` + `location_label`,
+  `location_movement`, `stocktake`, `stocktake_scan`).
+- Behälter-CRUD mit ortsneutralen Codes (C-/K-/T-), Umräumen mit Historie,
+  QR-Etiketten (Druck + CSV-Export), Inventur mit Soll-Ist-Abgleich,
+  mobiler Kamera-Scan.
+
 ## Phase 2 — Stammdaten pflegen
 - CRUD für **Besitzer** (Verein/Privat).
 - CRUD für **Lagerorte** inkl. Hierarchie (Eltern-Auswahl).
