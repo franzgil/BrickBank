@@ -12,6 +12,7 @@ use App\Controller\LabelController;
 use App\Controller\StocktakeController;
 
 $router->get('/', [HomeController::class, 'index']);
+$router->get('/ping', [HomeController::class, 'ping']);   // Diagnose ohne DB
 
 // --- Behälter (Container/Karton/Tüte) ---
 $router->get('/container', [ContainerController::class, 'index']);

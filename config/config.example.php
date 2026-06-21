@@ -5,7 +5,10 @@
  */
 return [
     'app' => [
-        // URL-Basis-Pfad, unter dem BrickBank läuft (z. B. '' für Root oder '/brickbank').
+        // Verzeichnis-Basis für STATISCHE Dateien (CSS/JS/Bilder).
+        // Leer = automatische Erkennung aus dem Pfad der index.php (empfohlen).
+        // Routen laufen ohnehin über index.php (PATH_INFO), daher hier i. d. R. '' lassen.
+        // Beispiel bei Bedarf: '/apps/BrickBank/public'
         'base_url' => '',
         'debug'    => false,
     ],

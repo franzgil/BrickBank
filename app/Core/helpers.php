@@ -1,6 +1,11 @@
 <?php
 /**
- * Globale View-Hilfsfunktionen.
+ * Globale Hilfsfunktionen für Views und URL-Aufbau.
+ *
+ * Routing-Modell: Routen laufen über die index.php (PATH_INFO), z. B.
+ *   /apps/BrickBank/public/index.php/container
+ * Das funktioniert ohne mod_rewrite in beliebigen Unterverzeichnissen.
+ * Liegt eine Rewrite-Regel vor (public/.htaccess), greifen auch saubere URLs.
  */
 
 use App\Core\Config;
@@ -13,11 +18,45 @@ if (!function_exists('e')) {
     }
 }
 
+if (!function_exists('app_script')) {
+    /** Web-Pfad zur index.php, z. B. /apps/BrickBank/public/index.php */
+    function app_script(): string
+    {
+        $s = $_SERVER['SCRIPT_NAME'] ?? '/index.php';
+        return str_replace('\\', '/', $s);
+    }
+}
+
+if (!function_exists('app_base_dir')) {
+    /** Verzeichnis der App (für statische Dateien). Leer = Domain-Root. */
+    function app_base_dir(): string
+    {
+        $configured = (string) Config::get('app.base_url', '');
+        if ($configured !== '') {
+            return rtrim($configured, '/');
+        }
+        $dir = rtrim(str_replace('\\', '/', dirname(app_script())), '/');
+        return ($dir === '' || $dir === '.') ? '' : $dir;
+    }
+}
+
+if (!function_exists('asset_url')) {
+    /** URL für statische Dateien unter public/ (CSS, JS, Bilder). */
+    function asset_url(string $path = ''): string
+    {
+        return app_base_dir() . '/' . ltrim($path, '/');
+    }
+}
+
 if (!function_exists('base_url')) {
-    /** Baut eine URL relativ zur konfigurierten base_url. */
+    /** URL für eine Route (läuft über index.php / PATH_INFO). */
     function base_url(string $path = ''): string
     {
-        $base = rtrim(Config::get('app.base_url', ''), '/');
-        return $base . '/' . ltrim($path, '/');
+        $path = ltrim($path, '/');
+        $script = app_script();
+        if ($path === '' || $path === '/') {
+            return $script;
+        }
+        return $script . '/' . $path;
     }
 }

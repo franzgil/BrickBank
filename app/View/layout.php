@@ -15,14 +15,14 @@ $nav = isset($nav) ? $nav : '';
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><?= e($title) ?> · afol.lu</title>
-  <link rel="stylesheet" href="<?= e(base_url('assets/app.css')) ?>">
+  <link rel="stylesheet" href="<?= e(asset_url('assets/app.css')) ?>">
 </head>
 <body>
 
   <header class="pageHeader">
     <div class="pageHeaderInner">
       <a class="pageHeaderLogo" href="<?= e(base_url('/')) ?>">
-        <img class="logoImg" src="<?= e(base_url('assets/afol-logo.png')) ?>" alt="AFOL.lu">
+        <img class="logoImg" src="<?= e(asset_url('assets/afol-logo.png')) ?>" alt="AFOL.lu">
         <span class="pageHeaderTitle">
           <span class="siteTitle">BrickBank</span>
           <span class="siteSubtitle">afol.lu · Inventar-System</span>

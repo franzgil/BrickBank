@@ -35,4 +35,4 @@ $h = (int) Config::get('labels.print.height_mm', 29);
 </article>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="<?= e(base_url('assets/qr-fallback.js')) ?>"></script>
+<script src="<?= e(asset_url('assets/qr-fallback.js')) ?>"></script>

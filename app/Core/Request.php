@@ -16,16 +16,31 @@ class Request
         return $this->method() === 'POST';
     }
 
-    /** Normalisierter Pfad ohne base_url, ohne Trailing-Slash (Root = '/'). */
+    /** Normalisierter Route-Pfad (über PATH_INFO bzw. REQUEST_URI), Root = '/'. */
     public function path(): string
     {
-        $uri  = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
-        $uri  = is_string($uri) ? $uri : '/';
-        $base = rtrim(Config::get('app.base_url', ''), '/');
-        if ($base !== '' && strpos($uri, $base) === 0) {
-            $uri = substr($uri, strlen($base));
+        // Bevorzugt PATH_INFO: Routing über index.php/<route> – ohne Rewrite.
+        $info = isset($_SERVER['PATH_INFO']) ? (string) $_SERVER['PATH_INFO'] : '';
+
+        if ($info === '') {
+            $uri    = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+            $uri    = is_string($uri) ? $uri : '/';
+            $script = app_script();                                  // …/public/index.php
+            $dir    = rtrim(str_replace('\\', '/', dirname($script)), '/');
+
+            if ($script !== '' && strpos($uri, $script) === 0) {
+                // Direktaufruf .../index.php[/route]
+                $info = substr($uri, strlen($script));
+            } elseif ($dir !== '' && strpos($uri, $dir) === 0) {
+                // Rewrite-Betrieb .../public/route
+                $info = substr($uri, strlen($dir));
+            } else {
+                $info = $uri;
+            }
         }
-        return '/' . trim($uri, '/');
+
+        $path = '/' . trim($info, '/');
+        return $path === '/index.php' ? '/' : $path;
     }
 
     /** @return mixed */

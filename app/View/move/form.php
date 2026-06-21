@@ -71,7 +71,7 @@ use App\Service\ContainerRules;
 </article>
 
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-<script src="<?= e(base_url('assets/scan.js')) ?>"></script>
+<script src="<?= e(asset_url('assets/scan.js')) ?>"></script>
 <script>
 function moveStartScan() {
   BrickBank.startScanner('reader', function (text) {

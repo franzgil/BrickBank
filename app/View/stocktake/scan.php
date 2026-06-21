@@ -54,7 +54,7 @@
 </article>
 
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-<script src="<?= e(base_url('assets/scan.js')) ?>"></script>
+<script src="<?= e(asset_url('assets/scan.js')) ?>"></script>
 <script>
 var ST_URL  = <?= json_encode(base_url('stocktake/' . $run['id'] . '/scan')) ?>;
 var ST_CSRF = <?= json_encode($csrf) ?>;
