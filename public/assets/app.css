@@ -141,3 +141,21 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--w
     .pageHeaderInner { flex-wrap: wrap; }
     .userBox { margin-left: 0; width: 100%; }
 }
+
+/* ---------- ETIKETTEN / DRUCK ---------- */
+.labelSheet { display: flex; flex-wrap: wrap; gap: 10px; }
+.labelCard {
+    width: var(--label-w, 62mm); min-height: var(--label-h, 29mm);
+    border: 1px solid #ccc; border-radius: 4px; padding: 6px 8px;
+    display: flex; gap: 8px; align-items: center; background: #fff;
+}
+.labelCard .qr { width: 22mm; height: 22mm; flex: none; }
+.labelCard .labelMeta { font-size: 11px; line-height: 1.3; }
+.labelCard .labelMeta .lblCode { font-family: "SFMono-Regular", Consolas, monospace; font-size: 15px; font-weight: 700; letter-spacing: 0.5px; }
+
+@media print {
+    .pageHeader, .mainMenu, .pageFooter, .noPrint, .flash { display: none !important; }
+    body { background: #fff; }
+    .pageWrapper { max-width: none; margin: 0; padding: 0; }
+    .labelCard { border: 1px solid #000; page-break-inside: avoid; }
+}
