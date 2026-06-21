@@ -1,0 +1,143 @@
+/* =========================================================================
+   BrickBank – App-Stylesheet
+   AFOL.lu / WoltLab Suite 5.5 Design
+   ========================================================================= */
+
+:root {
+    --wcfContentBackground: #ffffff;
+    --wcfContentBorder: #e1e1e1;
+    --wcfContentBorderInner: #ededed;
+    --wcfContentText: #2c2e30;
+    --wcfContentLink: #0a4a66;
+    --wcfContentLinkActive: #04293c;
+    --wcfHeadlineText: #1c1d1f;
+    --wcfPageBackground: #f5f6f7;
+    --wcfButtonPrimary: #0a4a66;
+    --wcfButtonPrimaryHover: #04293c;
+    --wcfNavBackground: #1c2833;
+    --wcfNavText: #ffffff;
+    --wcfBoxAccent: #c8a951;
+
+    --ok: #2e9b7a;     --ok-bg: #e9f6f0;
+    --warn: #b8860b;   --warn-bg: #fdf6e3;
+    --err: #c0392b;    --err-bg: #fbeae8;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+
+body {
+    font-family: "Segoe UI", "Liberation Sans", Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--wcfContentText);
+    background: var(--wcfPageBackground);
+}
+a { color: var(--wcfContentLink); text-decoration: none; }
+a:hover { color: var(--wcfContentLinkActive); text-decoration: underline; }
+
+/* ---------- HEADER ---------- */
+.pageHeader { background: var(--wcfNavBackground); color: var(--wcfNavText); border-bottom: 3px solid var(--wcfBoxAccent); }
+.pageHeaderInner { max-width: 1200px; margin: 0 auto; padding: 18px 20px; display: flex; align-items: center; gap: 18px; }
+.pageHeaderLogo { display: flex; align-items: center; gap: 14px; text-decoration: none; color: var(--wcfNavText); }
+.pageHeaderLogo:hover { text-decoration: none; }
+.logoImg { height: 52px; width: auto; display: block; }
+.pageHeaderTitle { display: flex; flex-direction: column; line-height: 1.1; }
+.pageHeaderTitle .siteTitle { font-size: 22px; font-weight: 600; letter-spacing: 0.3px; }
+.pageHeaderTitle .siteSubtitle { font-size: 12px; color: #b8c2cc; margin-top: 3px; letter-spacing: 0.5px; text-transform: uppercase; }
+.userBox { margin-left: auto; font-size: 13px; }
+.userBox .userName { color: #d4dce3; }
+.userBox .userLogin { background: var(--wcfBoxAccent); color: #1c2833; padding: 7px 14px; border-radius: 4px; font-weight: 600; }
+.userBox .userLogin:hover { background: #d9bd6e; color: #1c2833; text-decoration: none; }
+
+/* ---------- NAV ---------- */
+.mainMenu { background: #243340; border-bottom: 1px solid #1a242e; }
+.mainMenuInner { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+.mainMenuList { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; }
+.mainMenuList a { display: block; padding: 10px 16px; color: #d4dce3; font-size: 13px; font-weight: 500; text-decoration: none; border-right: 1px solid #1a242e; }
+.mainMenuList a:hover { background: #1c2833; color: #fff; text-decoration: none; }
+.mainMenuList .active a { background: var(--wcfBoxAccent); color: #1c2833; }
+
+/* ---------- LAYOUT ---------- */
+.pageWrapper { max-width: 1200px; margin: 0 auto; padding: 24px 20px; }
+.breadcrumbs { font-size: 12px; color: #66707a; margin-bottom: 14px; }
+.breadcrumbs a { color: #66707a; }
+.breadcrumbs span.sep { margin: 0 6px; color: #aab2ba; }
+
+/* ---------- CONTENT BOX ---------- */
+.contentBox { background: var(--wcfContentBackground); border: 1px solid var(--wcfContentBorder); border-radius: 4px; margin-bottom: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
+.contentBoxHeader { background: linear-gradient(180deg, #fafbfc 0%, #f0f2f4 100%); border-bottom: 1px solid var(--wcfContentBorder); padding: 12px 18px; font-size: 16px; font-weight: 600; color: var(--wcfHeadlineText); border-radius: 4px 4px 0 0; display: flex; align-items: center; gap: 10px; }
+.contentBoxHeader .icon { width: 18px; height: 18px; background: var(--wcfBoxAccent); border-radius: 3px; flex-shrink: 0; }
+.contentBoxBody { padding: 22px 24px; }
+.contentBoxBody h3 { font-size: 15px; color: var(--wcfHeadlineText); margin: 20px 0 8px; }
+.contentBoxBody > :first-child { margin-top: 0; }
+
+/* ---------- HERO ---------- */
+.hero { background: linear-gradient(135deg, #1c2833 0%, #2c3e50 60%, #34495e 100%); color: #fff; border-radius: 4px; padding: 32px 28px; margin-bottom: 22px; position: relative; overflow: hidden; border: 1px solid #1a242e; }
+.hero .heroBadge { display: inline-block; background: var(--wcfBoxAccent); color: #1c2833; font-size: 11px; font-weight: 700; letter-spacing: 1px; padding: 4px 10px; border-radius: 3px; text-transform: uppercase; margin-bottom: 14px; }
+.hero h1 { font-size: 28px; margin: 0 0 8px; font-weight: 700; }
+.hero .heroSubtitle { font-size: 15px; color: #c8d1da; margin: 0; max-width: 680px; }
+
+/* ---------- CARDS ---------- */
+.steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.stepCard { background: #fafbfc; border: 1px solid var(--wcfContentBorderInner); border-radius: 4px; padding: 16px; position: relative; padding-left: 56px; text-decoration: none; color: var(--wcfContentText); display: block; }
+a.stepCard:hover { background: #f0f2f4; text-decoration: none; }
+.stepCard .stepNum { position: absolute; left: 14px; top: 14px; width: 32px; height: 32px; background: var(--wcfBoxAccent); color: #1c2833; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; }
+.stepCard .stepTitle { font-weight: 600; font-size: 14px; color: var(--wcfHeadlineText); margin: 0 0 4px; }
+.stepCard .stepText { font-size: 12.5px; color: var(--wcfContentText); line-height: 1.5; }
+
+/* ---------- TABLES ---------- */
+table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+table:first-child { margin-top: 0; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--wcfContentBorderInner); vertical-align: top; }
+thead th { background: var(--wcfNavBackground); color: #fff; border-bottom: none; font-weight: 600; }
+tbody tr:nth-child(even) { background: #fafbfc; }
+td.actions { white-space: nowrap; }
+
+/* ---------- CODE BADGE ---------- */
+code, .codeTag { font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; }
+.codeTag { display: inline-block; background: #1c2833; color: #fff; padding: 2px 8px; border-radius: 3px; font-size: 12.5px; letter-spacing: 0.5px; }
+
+/* ---------- FORMS ---------- */
+.formRow { margin-bottom: 14px; }
+.formRow label { display: block; font-weight: 600; font-size: 13px; margin-bottom: 5px; color: var(--wcfHeadlineText); }
+input[type=text], input[type=search], input[type=email], select, textarea {
+    width: 100%; max-width: 420px; padding: 8px 10px; font-size: 14px;
+    border: 1px solid var(--wcfContentBorder); border-radius: 4px; background: #fff; font-family: inherit;
+}
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--wcfButtonPrimary); }
+.hint { font-size: 12px; color: #66707a; margin-top: 4px; }
+
+/* ---------- BUTTONS ---------- */
+.btn { display: inline-block; cursor: pointer; border: none; border-radius: 4px; padding: 9px 18px; font-size: 13.5px; font-weight: 600; font-family: inherit; text-decoration: none; background: var(--wcfButtonPrimary); color: #fff; }
+.btn:hover { background: var(--wcfButtonPrimaryHover); color: #fff; text-decoration: none; }
+.btn-accent { background: var(--wcfBoxAccent); color: #1c2833; }
+.btn-accent:hover { background: #d9bd6e; color: #1c2833; }
+.btn-ghost { background: transparent; color: var(--wcfButtonPrimary); border: 1px solid var(--wcfContentBorder); }
+.btn-ghost:hover { background: #f0f2f4; color: var(--wcfButtonPrimaryHover); }
+.btn-sm { padding: 5px 11px; font-size: 12.5px; }
+
+/* ---------- FLASH / NOTES ---------- */
+.flash { padding: 12px 16px; border-radius: 4px; margin-bottom: 18px; font-size: 13.5px; border-left: 4px solid; }
+.flash-info { background: #eaf2f6; border-color: var(--wcfButtonPrimary); color: #0a3a52; }
+.flash-success { background: var(--ok-bg); border-color: var(--ok); color: #1c5e49; }
+.flash-warning { background: var(--warn-bg); border-color: var(--warn); color: #6b5300; }
+.flash-error { background: var(--err-bg); border-color: var(--err); color: #842018; }
+
+/* ---------- STATUS PILLS (Inventur) ---------- */
+.pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; }
+.pill-ok { background: var(--ok-bg); color: var(--ok); }
+.pill-warn { background: var(--warn-bg); color: var(--warn); }
+.pill-err { background: var(--err-bg); color: var(--err); }
+
+/* ---------- FOOTER ---------- */
+.pageFooter { background: #1c2833; color: #b8c2cc; padding: 30px 20px 18px; margin-top: 30px; border-top: 3px solid var(--wcfBoxAccent); }
+.pageFooterInner { max-width: 1200px; margin: 0 auto; }
+.pageFooter a { color: var(--wcfBoxAccent); }
+.footerNote { font-size: 11px; color: #8a949e; line-height: 1.6; }
+
+@media (max-width: 600px) {
+    .hero h1 { font-size: 22px; }
+    .pageHeaderInner { flex-wrap: wrap; }
+    .userBox { margin-left: 0; width: 100%; }
+}

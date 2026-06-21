@@ -1,0 +1,10 @@
+# Echte Konfiguration mit Zugangsdaten – nie committen.
+/config/config.php
+
+# QR-/Etiketten-Cache
+/public/assets/cache/
+
+# Übliche Artefakte
+*.log
+.DS_Store
+vendor/
