@@ -30,7 +30,7 @@ return [
             'charset'  => 'utf8mb4',
         ],
         'table_prefix'  => 'wcf1_',
-        'cookie_prefix' => 'wsc_',                                   // an Instanz prüfen
+        'cookie_prefix' => 'wsc_22462a_',   // Session-Cookie: wsc_22462a_user_session
         'login_url'     => 'https://afol55.afol.lu/index.php?login/',
         // WSC-Benutzergruppen-IDs, die in BrickBank schreiben dürfen.
         // Leer = jeder eingeloggte Nutzer darf schreiben.
