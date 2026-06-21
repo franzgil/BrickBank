@@ -51,3 +51,33 @@ use App\Service\ContainerRules;
     </form>
   </div>
 </article>
+
+<article class="contentBox">
+  <div class="contentBoxHeader"><span class="icon"></span>Kamera-Scan (mobil)</div>
+  <div class="contentBoxBody">
+    <p class="hint">Erst auswählen, welches Feld der Scan füllt, dann Kamera starten.
+       Benötigt HTTPS für den Kamerazugriff.</p>
+    <p>
+      <label><input type="radio" name="scanTarget" value="code" checked> Behälter-Code</label>
+      &nbsp;&nbsp;
+      <label><input type="radio" name="scanTarget" value="target_code"> Zielort-Code</label>
+    </p>
+    <div id="reader" style="max-width:320px"></div>
+    <p>
+      <button type="button" class="btn btn-sm" onclick="moveStartScan()">Kamera starten</button>
+      <button type="button" class="btn-ghost btn-sm" onclick="BrickBank.stopScanner()">Stopp</button>
+    </p>
+  </div>
+</article>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="<?= e(base_url('assets/scan.js')) ?>"></script>
+<script>
+function moveStartScan() {
+  BrickBank.startScanner('reader', function (text) {
+    var which = document.querySelector('input[name=scanTarget]:checked').value;
+    var field = document.getElementById(which);
+    if (field) { field.value = text; field.focus(); }
+  }, false);
+}
+</script>
