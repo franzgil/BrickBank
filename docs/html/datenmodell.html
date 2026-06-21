@@ -3,31 +3,50 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Datenmodell — BrickBank</title>
+  <title>Datenmodell — BrickBank | afol.lu</title>
   <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
-  <div class="brick-strip"></div>
-  <header class="site">
-    <nav class="nav">
-      <a class="brand" href="index.html"><span class="logo-brick"></span>Brick<b>Bank</b></a>
-      <div class="nav-links">
-        <a href="index.html">Start</a>
-        <a href="konzept.html">Konzept</a>
-        <a class="active" href="datenmodell.html">Datenmodell</a>
-        <a href="architektur.html">Architektur</a>
-        <a href="roadmap.html">Roadmap</a>
-      </div>
-    </nav>
+
+  <header class="pageHeader">
+    <div class="pageHeaderInner">
+      <a class="pageHeaderLogo" href="index.html">
+        <span class="logoMark">BB</span>
+        <span class="pageHeaderTitle">
+          <span class="siteTitle">BrickBank</span>
+          <span class="siteSubtitle">afol.lu · Inventar-System</span>
+        </span>
+      </a>
+    </div>
   </header>
 
-  <main>
-    <div class="card">
-      <h2>Überblick</h2>
-      <p>Das Datenmodell ist auf <strong>MySQL</strong> ausgelegt. Es trennt den <em>Katalog</em>
-         (welche Teile/Farben gibt es überhaupt) von den <em>Beständen</em>
-         (was haben wir konkret, wo und wem gehört es).</p>
-      <pre><code>owner (Besitzer)            location (Lagerort, hierarchisch)
+  <nav class="mainMenu">
+    <div class="mainMenuInner">
+      <ul class="mainMenuList">
+        <li><a href="index.html">Start</a></li>
+        <li><a href="konzept.html">Konzept</a></li>
+        <li class="active"><a href="datenmodell.html">Datenmodell</a></li>
+        <li><a href="architektur.html">Architektur</a></li>
+        <li><a href="roadmap.html">Roadmap</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="pageWrapper">
+    <main>
+      <div class="breadcrumbs">
+        <a href="index.html">BrickBank</a>
+        <span class="sep">›</span>
+        <span>Datenmodell</span>
+      </div>
+
+      <article class="contentBox">
+        <div class="contentBoxHeader"><span class="icon"></span>Überblick</div>
+        <div class="contentBoxBody">
+          <p>Das Datenmodell ist auf <strong>MySQL</strong> ausgelegt. Es trennt den <em>Katalog</em>
+             (welche Teile/Farben gibt es überhaupt) von den <em>Beständen</em>
+             (was haben wir konkret, wo und wem gehört es).</p>
+          <pre><code>owner (Besitzer)            location (Lagerort, hierarchisch)
    │                              │
    └──────────┐         ┌─────────┘
               ▼         ▼
@@ -38,102 +57,107 @@
               ┌────┴────┐
             part      color
          (Teil)     (Farbe)</code></pre>
-    </div>
+        </div>
+      </article>
 
-    <div class="card">
-      <h2>Tabellen</h2>
+      <article class="contentBox">
+        <div class="contentBoxHeader"><span class="icon"></span>Tabellen</div>
+        <div class="contentBoxBody">
+          <h3>owner — Besitzer</h3>
+          <p>Ein Besitzer ist entweder der Verein oder ein einzelnes Mitglied.</p>
+          <table>
+            <thead><tr><th>Spalte</th><th>Typ</th><th>Beschreibung</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>INT, PK, AUTO_INCREMENT</td><td></td></tr>
+              <tr><td><code>type</code></td><td>ENUM('verein','privat')</td><td>Vereins- oder Privatbestand</td></tr>
+              <tr><td><code>name</code></td><td>VARCHAR(120)</td><td>Anzeigename (z.&nbsp;B. „afol.lu“ oder Mitgliedsname)</td></tr>
+              <tr><td><code>email</code></td><td>VARCHAR(190), NULL</td><td>optional, für Mitglieder</td></tr>
+              <tr><td><code>created_at</code></td><td>DATETIME</td><td></td></tr>
+            </tbody>
+          </table>
 
-      <h3>owner — Besitzer</h3>
-      <p>Ein Besitzer ist entweder der Verein oder ein einzelnes Mitglied.</p>
-      <table>
-        <thead><tr><th>Spalte</th><th>Typ</th><th>Beschreibung</th></tr></thead>
-        <tbody>
-          <tr><td><code>id</code></td><td>INT, PK, AUTO_INCREMENT</td><td></td></tr>
-          <tr><td><code>type</code></td><td>ENUM('verein','privat')</td><td>Vereins- oder Privatbestand</td></tr>
-          <tr><td><code>name</code></td><td>VARCHAR(120)</td><td>Anzeigename (z.&nbsp;B. „afol.lu“ oder Mitgliedsname)</td></tr>
-          <tr><td><code>email</code></td><td>VARCHAR(190), NULL</td><td>optional, für Mitglieder</td></tr>
-          <tr><td><code>created_at</code></td><td>DATETIME</td><td></td></tr>
-        </tbody>
-      </table>
+          <h3>location — Lagerort (hierarchisch)</h3>
+          <p>Selbst-referenzierend über <code>parent_id</code> — beliebig tiefe Hierarchien
+             (Raum → Schrank → Schublade → Box/Fach).</p>
+          <table>
+            <thead><tr><th>Spalte</th><th>Typ</th><th>Beschreibung</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>INT, PK, AUTO_INCREMENT</td><td></td></tr>
+              <tr><td><code>parent_id</code></td><td>INT, NULL, FK → location.id</td><td>übergeordneter Ort (NULL = Wurzel)</td></tr>
+              <tr><td><code>name</code></td><td>VARCHAR(120)</td><td>z.&nbsp;B. „Schublade B2“</td></tr>
+              <tr><td><code>kind</code></td><td>ENUM('raum','schrank','schublade','box','fach','sonstiges')</td><td>Art des Ortes</td></tr>
+              <tr><td><code>note</code></td><td>VARCHAR(255), NULL</td><td>freie Notiz</td></tr>
+            </tbody>
+          </table>
 
-      <h3>location — Lagerort (hierarchisch)</h3>
-      <p>Selbst-referenzierend über <code>parent_id</code> — beliebig tiefe Hierarchien
-         (Raum → Schrank → Schublade → Box/Fach).</p>
-      <table>
-        <thead><tr><th>Spalte</th><th>Typ</th><th>Beschreibung</th></tr></thead>
-        <tbody>
-          <tr><td><code>id</code></td><td>INT, PK, AUTO_INCREMENT</td><td></td></tr>
-          <tr><td><code>parent_id</code></td><td>INT, NULL, FK → location.id</td><td>übergeordneter Ort (NULL = Wurzel)</td></tr>
-          <tr><td><code>name</code></td><td>VARCHAR(120)</td><td>z.&nbsp;B. „Schublade B2“</td></tr>
-          <tr><td><code>kind</code></td><td>ENUM('raum','schrank','schublade','box','fach','sonstiges')</td><td>Art des Ortes</td></tr>
-          <tr><td><code>note</code></td><td>VARCHAR(255), NULL</td><td>freie Notiz</td></tr>
-        </tbody>
-      </table>
+          <h3>part — Teil (farbunabhängig)</h3>
+          <table>
+            <thead><tr><th>Spalte</th><th>Typ</th><th>Beschreibung</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>INT, PK, AUTO_INCREMENT</td><td></td></tr>
+              <tr><td><code>part_no</code></td><td>VARCHAR(40), UNIQUE</td><td>Teilenummer (z.&nbsp;B. BrickLink/LEGO-Design-ID)</td></tr>
+              <tr><td><code>name</code></td><td>VARCHAR(190)</td><td>z.&nbsp;B. „Brick 2 x 4“</td></tr>
+              <tr><td><code>category</code></td><td>VARCHAR(80), NULL</td><td>z.&nbsp;B. „Brick“, „Plate“, „Technic“</td></tr>
+            </tbody>
+          </table>
 
-      <h3>part — Teil (farbunabhängig)</h3>
-      <table>
-        <thead><tr><th>Spalte</th><th>Typ</th><th>Beschreibung</th></tr></thead>
-        <tbody>
-          <tr><td><code>id</code></td><td>INT, PK, AUTO_INCREMENT</td><td></td></tr>
-          <tr><td><code>part_no</code></td><td>VARCHAR(40), UNIQUE</td><td>Teilenummer (z.&nbsp;B. BrickLink/LEGO-Design-ID)</td></tr>
-          <tr><td><code>name</code></td><td>VARCHAR(190)</td><td>z.&nbsp;B. „Brick 2 x 4“</td></tr>
-          <tr><td><code>category</code></td><td>VARCHAR(80), NULL</td><td>z.&nbsp;B. „Brick“, „Plate“, „Technic“</td></tr>
-        </tbody>
-      </table>
+          <h3>color — Farbe</h3>
+          <table>
+            <thead><tr><th>Spalte</th><th>Typ</th><th>Beschreibung</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>INT, PK, AUTO_INCREMENT</td><td></td></tr>
+              <tr><td><code>name</code></td><td>VARCHAR(80)</td><td>z.&nbsp;B. „Bright Red“</td></tr>
+              <tr><td><code>code</code></td><td>VARCHAR(20), NULL</td><td>externer Farbcode (z.&nbsp;B. BrickLink-ID)</td></tr>
+              <tr><td><code>hex</code></td><td>CHAR(6), NULL</td><td>RGB für Darstellung</td></tr>
+            </tbody>
+          </table>
 
-      <h3>color — Farbe</h3>
-      <table>
-        <thead><tr><th>Spalte</th><th>Typ</th><th>Beschreibung</th></tr></thead>
-        <tbody>
-          <tr><td><code>id</code></td><td>INT, PK, AUTO_INCREMENT</td><td></td></tr>
-          <tr><td><code>name</code></td><td>VARCHAR(80)</td><td>z.&nbsp;B. „Bright Red“</td></tr>
-          <tr><td><code>code</code></td><td>VARCHAR(20), NULL</td><td>externer Farbcode (z.&nbsp;B. BrickLink-ID)</td></tr>
-          <tr><td><code>hex</code></td><td>CHAR(6), NULL</td><td>RGB für Darstellung</td></tr>
-        </tbody>
-      </table>
+          <h3>element — Teil + Farbe</h3>
+          <p>Die zählbare Einheit. Eindeutig je Kombination aus <code>part_id</code> + <code>color_id</code>.</p>
+          <table>
+            <thead><tr><th>Spalte</th><th>Typ</th><th>Beschreibung</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>INT, PK, AUTO_INCREMENT</td><td></td></tr>
+              <tr><td><code>part_id</code></td><td>INT, FK → part.id</td><td></td></tr>
+              <tr><td><code>color_id</code></td><td>INT, FK → color.id</td><td></td></tr>
+              <tr><td><code>UNIQUE(part_id, color_id)</code></td><td></td><td>verhindert Dubletten</td></tr>
+            </tbody>
+          </table>
 
-      <h3>element — Teil + Farbe</h3>
-      <p>Die zählbare Einheit. Eindeutig je Kombination aus <code>part_id</code> + <code>color_id</code>.</p>
-      <table>
-        <thead><tr><th>Spalte</th><th>Typ</th><th>Beschreibung</th></tr></thead>
-        <tbody>
-          <tr><td><code>id</code></td><td>INT, PK, AUTO_INCREMENT</td><td></td></tr>
-          <tr><td><code>part_id</code></td><td>INT, FK → part.id</td><td></td></tr>
-          <tr><td><code>color_id</code></td><td>INT, FK → color.id</td><td></td></tr>
-          <tr><td colspan="2">UNIQUE(part_id, color_id)</td><td>verhindert Dubletten</td></tr>
-        </tbody>
-      </table>
+          <h3>inventory_item — Bestandsposten</h3>
+          <p>Das Herzstück: „<strong>Menge</strong> eines <strong>Elements</strong> an einem
+             <strong>Ort</strong>, das einem <strong>Besitzer</strong> gehört.“</p>
+          <table>
+            <thead><tr><th>Spalte</th><th>Typ</th><th>Beschreibung</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>INT, PK, AUTO_INCREMENT</td><td></td></tr>
+              <tr><td><code>element_id</code></td><td>INT, FK → element.id</td><td>welches Teil+Farbe</td></tr>
+              <tr><td><code>location_id</code></td><td>INT, FK → location.id</td><td>wo gelagert</td></tr>
+              <tr><td><code>owner_id</code></td><td>INT, FK → owner.id</td><td>wem es gehört</td></tr>
+              <tr><td><code>quantity</code></td><td>INT, ≥ 0</td><td>Anzahl Stück</td></tr>
+              <tr><td><code>updated_at</code></td><td>DATETIME</td><td>letzte Änderung</td></tr>
+              <tr><td><code>UNIQUE(element_id, location_id, owner_id)</code></td><td></td><td>ein Posten je Kombination</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
 
-      <h3>inventory_item — Bestandsposten</h3>
-      <p>Das Herzstück: „<strong>Menge</strong> eines <strong>Elements</strong> an einem
-         <strong>Ort</strong>, das einem <strong>Besitzer</strong> gehört.“</p>
-      <table>
-        <thead><tr><th>Spalte</th><th>Typ</th><th>Beschreibung</th></tr></thead>
-        <tbody>
-          <tr><td><code>id</code></td><td>INT, PK, AUTO_INCREMENT</td><td></td></tr>
-          <tr><td><code>element_id</code></td><td>INT, FK → element.id</td><td>welches Teil+Farbe</td></tr>
-          <tr><td><code>location_id</code></td><td>INT, FK → location.id</td><td>wo gelagert</td></tr>
-          <tr><td><code>owner_id</code></td><td>INT, FK → owner.id</td><td>wem es gehört</td></tr>
-          <tr><td><code>quantity</code></td><td>INT, ≥ 0</td><td>Anzahl Stück</td></tr>
-          <tr><td><code>updated_at</code></td><td>DATETIME</td><td>letzte Änderung</td></tr>
-          <tr><td colspan="2">UNIQUE(element_id, location_id, owner_id)</td><td>ein Posten je Kombination</td></tr>
-        </tbody>
-      </table>
-    </div>
+      <article class="contentBox">
+        <div class="contentBoxHeader"><span class="icon"></span>Typische Abfragen</div>
+        <div class="contentBoxBody">
+          <ul>
+            <li><strong>Gesamtmenge eines Elements</strong> (über alle Orte/Besitzer): <code>SUM(quantity)</code> gruppiert nach <code>element_id</code>.</li>
+            <li><strong>„Wo liegen die roten 2×4?“</strong>: Join <code>inventory_item → element → part/color</code>, gefiltert nach <code>part_no</code>/Farbe, ausgegeben mit <code>location</code> und <code>quantity</code>.</li>
+            <li><strong>„Was liegt in Schublade B2?“</strong>: <code>inventory_item</code> gefiltert nach <code>location_id</code> (inkl. Kinder-Orte).</li>
+            <li><strong>Vereins- vs. Privatbestand</strong>: Filter über <code>owner.type</code>.</li>
+          </ul>
+        </div>
+      </article>
 
-    <div class="card">
-      <h2>Typische Abfragen</h2>
-      <ul>
-        <li><strong>Gesamtmenge eines Elements</strong> (über alle Orte/Besitzer): <code>SUM(quantity)</code> gruppiert nach <code>element_id</code>.</li>
-        <li><strong>„Wo liegen die roten 2×4?“</strong>: Join <code>inventory_item → element → part/color</code>, gefiltert nach <code>part_no</code>/Farbe, ausgegeben mit <code>location</code> und <code>quantity</code>.</li>
-        <li><strong>„Was liegt in Schublade B2?“</strong>: <code>inventory_item</code> gefiltert nach <code>location_id</code> (inkl. Kinder-Orte).</li>
-        <li><strong>Vereins- vs. Privatbestand</strong>: Filter über <code>owner.type</code>.</li>
-      </ul>
-    </div>
-
-    <div class="card">
-      <h2>DDL-Skizze (MySQL)</h2>
-      <pre><code>CREATE TABLE owner (
+      <article class="contentBox">
+        <div class="contentBoxHeader"><span class="icon"></span>DDL-Skizze (MySQL)</div>
+        <div class="contentBoxBody">
+          <pre><code>CREATE TABLE owner (
   id INT AUTO_INCREMENT PRIMARY KEY,
   type ENUM('verein','privat') NOT NULL,
   name VARCHAR(120) NOT NULL,
@@ -185,11 +209,27 @@ CREATE TABLE inventory_item (
   FOREIGN KEY (location_id) REFERENCES location(id),
   FOREIGN KEY (owner_id) REFERENCES owner(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;</code></pre>
-    </div>
-  </main>
+        </div>
+      </article>
+    </main>
+  </div>
 
-  <footer class="site">
-    BrickBank · ein Projekt der <a href="https://afol.lu">afol.lu</a> Community
+  <footer class="pageFooter">
+    <div class="pageFooterInner">
+      <ol>
+        <li><a href="index.html">Start</a></li>
+        <li><a href="konzept.html">Konzept</a></li>
+        <li><a href="datenmodell.html">Datenmodell</a></li>
+        <li><a href="architektur.html">Architektur</a></li>
+        <li><a href="roadmap.html">Roadmap</a></li>
+      </ol>
+      <div class="footerNote">
+        BrickBank · ein Projekt der <a href="https://afol55.afol.lu/">AFOL.lu a.s.b.l.</a>
+        (Adult Fans of LEGO Luxembourg). LEGO® ist eine Marke der LEGO Group, die dieses Projekt
+        weder sponsert noch autorisiert oder unterstützt.
+      </div>
+    </div>
   </footer>
+
 </body>
 </html>

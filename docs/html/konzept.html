@@ -3,95 +3,137 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Konzept — BrickBank</title>
+  <title>Konzept — BrickBank | afol.lu</title>
   <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
-  <div class="brick-strip"></div>
-  <header class="site">
-    <nav class="nav">
-      <a class="brand" href="index.html"><span class="logo-brick"></span>Brick<b>Bank</b></a>
-      <div class="nav-links">
-        <a href="index.html">Start</a>
-        <a class="active" href="konzept.html">Konzept</a>
-        <a href="datenmodell.html">Datenmodell</a>
-        <a href="architektur.html">Architektur</a>
-        <a href="roadmap.html">Roadmap</a>
-      </div>
-    </nav>
+
+  <header class="pageHeader">
+    <div class="pageHeaderInner">
+      <a class="pageHeaderLogo" href="index.html">
+        <span class="logoMark">BB</span>
+        <span class="pageHeaderTitle">
+          <span class="siteTitle">BrickBank</span>
+          <span class="siteSubtitle">afol.lu · Inventar-System</span>
+        </span>
+      </a>
+    </div>
   </header>
 
-  <main>
-    <div class="card">
-      <h2>Ausgangslage</h2>
-      <p>Die afol.lu Community besitzt eine große Menge LEGO-Steine — teils gemeinsam
-         (z.&nbsp;B. für Bauprojekte und Events), teils privat von einzelnen Mitgliedern.
-         Steine lagern an verschiedenen Orten. Heute ist unklar:</p>
-      <ul>
-        <li><strong>Was</strong> ist vorhanden (welche Teile, welche Farben)?</li>
-        <li><strong>Wie viel</strong> ist davon da?</li>
-        <li><strong>Wo</strong> liegt es konkret?</li>
-        <li><strong>Wem</strong> gehört es (Verein oder privat)?</li>
+  <nav class="mainMenu">
+    <div class="mainMenuInner">
+      <ul class="mainMenuList">
+        <li><a href="index.html">Start</a></li>
+        <li class="active"><a href="konzept.html">Konzept</a></li>
+        <li><a href="datenmodell.html">Datenmodell</a></li>
+        <li><a href="architektur.html">Architektur</a></li>
+        <li><a href="roadmap.html">Roadmap</a></li>
       </ul>
-      <p>BrickBank soll diese Fragen zentral und verlässlich beantworten.</p>
     </div>
+  </nav>
 
-    <div class="card">
-      <h2>Kernziele</h2>
+  <div class="pageWrapper">
+    <main>
+      <div class="breadcrumbs">
+        <a href="index.html">BrickBank</a>
+        <span class="sep">›</span>
+        <span>Konzept</span>
+      </div>
+
+      <article class="contentBox">
+        <div class="contentBoxHeader"><span class="icon"></span>Ausgangslage</div>
+        <div class="contentBoxBody">
+          <p>Die afol.lu Community besitzt eine große Menge LEGO®-Steine — teils gemeinsam
+             (z.&nbsp;B. für Bauprojekte und Events), teils privat von einzelnen Mitgliedern.
+             Steine lagern an verschiedenen Orten. Heute ist unklar:</p>
+          <ul>
+            <li><strong>Was</strong> ist vorhanden (welche Teile, welche Farben)?</li>
+            <li><strong>Wie viel</strong> ist davon da?</li>
+            <li><strong>Wo</strong> liegt es konkret?</li>
+            <li><strong>Wem</strong> gehört es (Verein oder privat)?</li>
+          </ul>
+          <p>BrickBank soll diese Fragen zentral und verlässlich beantworten.</p>
+        </div>
+      </article>
+
+      <article class="contentBox">
+        <div class="contentBoxHeader"><span class="icon"></span>Kernziele</div>
+        <div class="contentBoxBody">
+          <ol>
+            <li><strong>Bestandsführung</strong> — Mengen je Teil/Farbe nachvollziehbar erfassen.</li>
+            <li><strong>Lokalisierung</strong> — jeder Bestandsposten ist einem konkreten Lagerort zugeordnet.</li>
+            <li><strong>Eigentumstrennung</strong> — Vereins- und Privatbestand sind klar unterscheidbar.</li>
+            <li><strong>Auffindbarkeit</strong> — schnelles Suchen/Filtern nach Teil, Farbe, Ort, Besitzer.</li>
+          </ol>
+          <h3>Nicht-Ziele (vorerst)</h3>
+          <ul>
+            <li>Kein Marktplatz / Verkauf.</li>
+            <li>Kein Verleih-Workflow mit Fristen und Mahnungen (kann später kommen).</li>
+            <li>Keine vollständige LEGO®-Set-Datenbank — Fokus auf lose Teile (Bulk).</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="contentBox">
+        <div class="contentBoxHeader"><span class="icon"></span>Glossar</div>
+        <div class="contentBoxBody">
+          <table>
+            <thead><tr><th>Begriff</th><th>Bedeutung</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Teil (Part)</strong></td><td>Ein LEGO®-Bauteil-Typ, identifiziert über eine Teilenummer (z.&nbsp;B. BrickLink-/LEGO-Design-ID). Unabhängig von der Farbe.</td></tr>
+              <tr><td><strong>Farbe (Color)</strong></td><td>Eine LEGO®-Farbe (z.&nbsp;B. „Bright Red“). Ein Teil existiert i.&nbsp;d.&nbsp;R. in vielen Farben.</td></tr>
+              <tr><td><strong>Element</strong></td><td>Konkrete Kombination aus Teil + Farbe (das, was man tatsächlich zählt).</td></tr>
+              <tr><td><strong>Lagerort (Location)</strong></td><td>Physischer Aufbewahrungsort, hierarchisch (Raum → Schrank → Schublade → Box/Fach).</td></tr>
+              <tr><td><strong>Bestandsposten (Inventory Item)</strong></td><td>„X Stück von Element Y, an Ort Z, gehört Besitzer W.“ Die zentrale Einheit der Bestandsführung.</td></tr>
+              <tr><td><strong>Besitzer (Owner)</strong></td><td>Verein (gemeinsamer Bestand) oder ein einzelnes Mitglied (Privatbestand).</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="contentBox">
+        <div class="contentBoxHeader"><span class="icon"></span>Anwendungsfälle</div>
+        <div class="contentBoxBody">
+          <ul>
+            <li><strong>UC1 – Teil inventarisieren:</strong> „250× rote 2×4-Steine in Box A3 im Vereinslager (Vereinsbesitz)“.</li>
+            <li><strong>UC2 – Bestand suchen:</strong> „Zeige alle roten 2×4-Steine“ → Liste mit Mengen und Lagerorten, summiert über alle Orte.</li>
+            <li><strong>UC3 – Entnahme/Rücklage:</strong> Menge eines Postens verringern/erhöhen.</li>
+            <li><strong>UC4 – Umlagern:</strong> Posten von einem Lagerort an einen anderen verschieben.</li>
+            <li><strong>UC5 – Privatbestand führen:</strong> Mitglied erfasst eigene Teile, getrennt vom Vereinsbestand.</li>
+            <li><strong>UC6 – Lagerort-Übersicht:</strong> „Was liegt alles in Schublade B2?“</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="contentBox">
+        <div class="contentBoxHeader"><span class="icon"></span>Offene Fragen</div>
+        <div class="contentBoxBody">
+          <ul>
+            <li>Teilenummern/Farben aus externer Quelle (z.&nbsp;B. BrickLink-Katalog) importieren oder manuell pflegen?</li>
+            <li>Brauchen Privatbestände eine Sichtbarkeitssteuerung (privat vs. für Verein sichtbar)?</li>
+            <li>Mehrsprachigkeit (LU/FR/DE/EN) nötig?</li>
+          </ul>
+        </div>
+      </article>
+    </main>
+  </div>
+
+  <footer class="pageFooter">
+    <div class="pageFooterInner">
       <ol>
-        <li><strong>Bestandsführung</strong> — Mengen je Teil/Farbe nachvollziehbar erfassen.</li>
-        <li><strong>Lokalisierung</strong> — jeder Bestandsposten ist einem konkreten Lagerort zugeordnet.</li>
-        <li><strong>Eigentumstrennung</strong> — Vereins- und Privatbestand sind klar unterscheidbar.</li>
-        <li><strong>Auffindbarkeit</strong> — schnelles Suchen/Filtern nach Teil, Farbe, Ort, Besitzer.</li>
+        <li><a href="index.html">Start</a></li>
+        <li><a href="konzept.html">Konzept</a></li>
+        <li><a href="datenmodell.html">Datenmodell</a></li>
+        <li><a href="architektur.html">Architektur</a></li>
+        <li><a href="roadmap.html">Roadmap</a></li>
       </ol>
-
-      <h3>Nicht-Ziele (vorerst)</h3>
-      <ul>
-        <li>Kein Marktplatz / Verkauf.</li>
-        <li>Kein Verleih-Workflow mit Fristen und Mahnungen (kann später kommen).</li>
-        <li>Keine vollständige LEGO-Set-Datenbank — Fokus auf lose Teile (Bulk).</li>
-      </ul>
+      <div class="footerNote">
+        BrickBank · ein Projekt der <a href="https://afol55.afol.lu/">AFOL.lu a.s.b.l.</a>
+        (Adult Fans of LEGO Luxembourg). LEGO® ist eine Marke der LEGO Group, die dieses Projekt
+        weder sponsert noch autorisiert oder unterstützt.
+      </div>
     </div>
-
-    <div class="card">
-      <h2>Glossar</h2>
-      <table>
-        <thead><tr><th>Begriff</th><th>Bedeutung</th></tr></thead>
-        <tbody>
-          <tr><td><strong>Teil (Part)</strong></td><td>Ein LEGO-Bauteil-Typ, identifiziert über eine Teilenummer (z.&nbsp;B. BrickLink-/LEGO-Design-ID). Unabhängig von der Farbe.</td></tr>
-          <tr><td><strong>Farbe (Color)</strong></td><td>Eine LEGO-Farbe (z.&nbsp;B. „Bright Red“). Ein Teil existiert i.&nbsp;d.&nbsp;R. in vielen Farben.</td></tr>
-          <tr><td><strong>Element</strong></td><td>Konkrete Kombination aus Teil + Farbe (das, was man tatsächlich zählt).</td></tr>
-          <tr><td><strong>Lagerort (Location)</strong></td><td>Physischer Aufbewahrungsort, hierarchisch (Raum → Schrank → Schublade → Box/Fach).</td></tr>
-          <tr><td><strong>Bestandsposten (Inventory Item)</strong></td><td>„X Stück von Element Y, an Ort Z, gehört Besitzer W.“ Die zentrale Einheit der Bestandsführung.</td></tr>
-          <tr><td><strong>Besitzer (Owner)</strong></td><td>Verein (gemeinsamer Bestand) oder ein einzelnes Mitglied (Privatbestand).</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="card">
-      <h2>Anwendungsfälle</h2>
-      <ul>
-        <li><strong>UC1 – Teil inventarisieren:</strong> „250× rote 2×4-Steine in Box A3 im Vereinslager (Vereinsbesitz)“.</li>
-        <li><strong>UC2 – Bestand suchen:</strong> „Zeige alle roten 2×4-Steine“ → Liste mit Mengen und Lagerorten, summiert über alle Orte.</li>
-        <li><strong>UC3 – Entnahme/Rücklage:</strong> Menge eines Postens verringern/erhöhen.</li>
-        <li><strong>UC4 – Umlagern:</strong> Posten von einem Lagerort an einen anderen verschieben.</li>
-        <li><strong>UC5 – Privatbestand führen:</strong> Mitglied erfasst eigene Teile, getrennt vom Vereinsbestand.</li>
-        <li><strong>UC6 – Lagerort-Übersicht:</strong> „Was liegt alles in Schublade B2?“</li>
-      </ul>
-    </div>
-
-    <div class="card">
-      <h2>Offene Fragen</h2>
-      <ul>
-        <li>Teilenummern/Farben aus externer Quelle (z.&nbsp;B. BrickLink-Katalog) importieren oder manuell pflegen?</li>
-        <li>Brauchen Privatbestände eine Sichtbarkeitssteuerung (privat vs. für Verein sichtbar)?</li>
-        <li>Mehrsprachigkeit (LU/FR/DE/EN) nötig?</li>
-      </ul>
-    </div>
-  </main>
-
-  <footer class="site">
-    BrickBank · ein Projekt der <a href="https://afol.lu">afol.lu</a> Community
   </footer>
+
 </body>
 </html>

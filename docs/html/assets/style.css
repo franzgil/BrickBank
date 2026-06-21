@@ -1,253 +1,341 @@
 /* =========================================================================
    BrickBank — Dokumentation
-   AFOL.lu-inspiriertes Theme (Annäherung).
-   ▸ Echte Markenwerte hier zentral anpassen:
-     Farben, Schrift und Logo werden über die CSS-Variablen unten gesteuert.
+   AFOL.lu / WoltLab Suite 5.5 Design (matcht afol55.afol.lu Look & Feel)
    ========================================================================= */
 
 :root {
-  /* --- Markenfarben (LEGO/AFOL-typisch) ----------------------------------
-     Bei Vorliegen der echten afol.lu-Werte einfach hier ersetzen.          */
-  --brand-red:    #d01012;   /* LEGO-Rot   */
-  --brand-yellow: #ffd500;   /* LEGO-Gelb  */
-  --brand-black:  #1b1b1b;
-  --brand-blue:   #006cb7;
-
-  --bg:           #f6f7f9;
-  --surface:      #ffffff;
-  --text:         #1b1b1b;
-  --text-muted:   #5b6470;
-  --border:       #e3e6ea;
-
-  --radius:       10px;
-  --shadow:       0 2px 8px rgba(0, 0, 0, .06);
-  --shadow-lg:    0 8px 28px rgba(0, 0, 0, .12);
-
-  --font-sans: "Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-
-  --maxw: 980px;
+    --wcfContentBackground: #ffffff;
+    --wcfContentBorder: #e1e1e1;
+    --wcfContentBorderInner: #ededed;
+    --wcfContentText: #2c2e30;
+    --wcfContentLink: #0a4a66;
+    --wcfContentLinkActive: #04293c;
+    --wcfHeadlineText: #1c1d1f;
+    --wcfPageBackground: #f5f6f7;
+    --wcfButtonPrimary: #0a4a66;
+    --wcfButtonPrimaryHover: #04293c;
+    --wcfNavBackground: #1c2833;
+    --wcfNavText: #ffffff;
+    --wcfBoxAccent: #c8a951;
 }
 
 * { box-sizing: border-box; }
-
-html { scroll-behavior: smooth; }
+html, body { margin: 0; padding: 0; }
 
 body {
-  margin: 0;
-  font-family: var(--font-sans);
-  color: var(--text);
-  background: var(--bg);
-  line-height: 1.6;
+    font-family: "Segoe UI", "Liberation Sans", Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--wcfContentText);
+    background: var(--wcfPageBackground);
 }
 
-/* --- Stein-Motiv-Band (oben) ------------------------------------------- */
-.brick-strip {
-  height: 8px;
-  background:
-    repeating-linear-gradient(90deg,
-      var(--brand-red)    0 40px,
-      var(--brand-yellow) 40px 80px,
-      var(--brand-blue)   80px 120px,
-      var(--brand-black)  120px 160px);
+a { color: var(--wcfContentLink); text-decoration: none; }
+a:hover { color: var(--wcfContentLinkActive); text-decoration: underline; }
+
+/* ---------- HEADER ---------- */
+.pageHeader {
+    background: var(--wcfNavBackground);
+    color: var(--wcfNavText);
+    border-bottom: 3px solid var(--wcfBoxAccent);
+}
+.pageHeaderInner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+.pageHeaderLogo {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    text-decoration: none;
+    color: var(--wcfNavText);
+}
+.pageHeaderLogo:hover { text-decoration: none; }
+.logoMark {
+    width: 56px;
+    height: 56px;
+    background: var(--wcfBoxAccent);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 22px;
+    color: #1c2833;
+    letter-spacing: -0.5px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+}
+.pageHeaderTitle { display: flex; flex-direction: column; line-height: 1.1; }
+.pageHeaderTitle .siteTitle { font-size: 22px; font-weight: 600; letter-spacing: 0.3px; }
+.pageHeaderTitle .siteSubtitle {
+    font-size: 12px;
+    color: #b8c2cc;
+    margin-top: 3px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
 }
 
-/* --- Kopfzeile / Navigation -------------------------------------------- */
-header.site {
-  background: var(--brand-black);
-  color: #fff;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  box-shadow: var(--shadow);
+/* ---------- MAIN NAVIGATION ---------- */
+.mainMenu {
+    background: #243340;
+    border-bottom: 1px solid #1a242e;
 }
-.nav {
-  max-width: var(--maxw);
-  margin: 0 auto;
-  padding: 14px 20px;
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  flex-wrap: wrap;
+.mainMenuInner { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+.mainMenuList {
+    list-style: none; margin: 0; padding: 0;
+    display: flex; flex-wrap: wrap;
 }
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: 800;
-  font-size: 1.25rem;
-  color: #fff;
-  text-decoration: none;
-  letter-spacing: .2px;
+.mainMenuList a {
+    display: block;
+    padding: 10px 16px;
+    color: #d4dce3;
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    border-right: 1px solid #1a242e;
 }
-/* Logo-Platzhalter: zwei „Noppen“ als Stein. Durch echtes afol.lu-Logo ersetzen. */
-.logo-brick {
-  width: 38px; height: 26px;
-  background: var(--brand-red);
-  border-radius: 4px;
-  position: relative;
-  flex: none;
-}
-.logo-brick::before, .logo-brick::after {
-  content: "";
-  position: absolute;
-  top: -6px;
-  width: 12px; height: 8px;
-  background: var(--brand-red);
-  border-radius: 4px 4px 0 0;
-}
-.logo-brick::before { left: 6px; }
-.logo-brick::after  { right: 6px; }
-.brand b { color: var(--brand-yellow); }
+.mainMenuList a:hover { background: #1c2833; color: #fff; text-decoration: none; }
+.mainMenuList .active a { background: var(--wcfBoxAccent); color: #1c2833; }
 
-.nav-links {
-  margin-left: auto;
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
+/* ---------- LAYOUT ---------- */
+.pageWrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px 20px;
 }
-.nav-links a {
-  color: #e9eef3;
-  text-decoration: none;
-  padding: 7px 12px;
-  border-radius: 8px;
-  font-size: .95rem;
-  font-weight: 600;
-}
-.nav-links a:hover { background: rgba(255, 255, 255, .12); }
-.nav-links a.active { background: var(--brand-red); color: #fff; }
 
-/* --- Hero --------------------------------------------------------------- */
+/* ---------- BREADCRUMB ---------- */
+.breadcrumbs { font-size: 12px; color: #66707a; margin-bottom: 14px; }
+.breadcrumbs a { color: #66707a; }
+.breadcrumbs span.sep { margin: 0 6px; color: #aab2ba; }
+
+/* ---------- CONTENT BOX ---------- */
+.contentBox {
+    background: var(--wcfContentBackground);
+    border: 1px solid var(--wcfContentBorder);
+    border-radius: 4px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+}
+.contentBoxHeader {
+    background: linear-gradient(180deg, #fafbfc 0%, #f0f2f4 100%);
+    border-bottom: 1px solid var(--wcfContentBorder);
+    padding: 12px 18px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--wcfHeadlineText);
+    border-radius: 4px 4px 0 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.contentBoxHeader .icon {
+    width: 18px; height: 18px;
+    background: var(--wcfBoxAccent);
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+.contentBoxBody { padding: 22px 24px; }
+.contentBoxBody p { margin: 0 0 12px; }
+.contentBoxBody p:last-child { margin-bottom: 0; }
+.contentBoxBody h3 {
+    font-size: 15px;
+    color: var(--wcfHeadlineText);
+    margin: 20px 0 8px;
+}
+.contentBoxBody ul, .contentBoxBody ol { margin: 0 0 12px; padding-left: 22px; }
+.contentBoxBody li { margin-bottom: 5px; }
+
+/* ---------- HERO ---------- */
 .hero {
-  background: linear-gradient(135deg, var(--brand-red), #a30c0e);
-  color: #fff;
+    background: linear-gradient(135deg, #1c2833 0%, #2c3e50 60%, #34495e 100%);
+    color: #fff;
+    border-radius: 4px;
+    padding: 32px 28px;
+    margin-bottom: 22px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid #1a242e;
 }
-.hero-inner {
-  max-width: var(--maxw);
-  margin: 0 auto;
-  padding: 56px 20px;
+.hero::before {
+    content: "";
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 200px; height: 200px;
+    background: var(--wcfBoxAccent);
+    opacity: 0.08;
+    border-radius: 50%;
 }
-.hero h1 { margin: 0 0 10px; font-size: 2.4rem; }
-.hero p  { margin: 0; max-width: 640px; font-size: 1.15rem; opacity: .95; }
-.hero .pill {
-  display: inline-block;
-  background: var(--brand-yellow);
-  color: var(--brand-black);
-  font-weight: 700;
-  font-size: .8rem;
-  padding: 4px 12px;
-  border-radius: 999px;
-  margin-bottom: 14px;
+.hero::after {
+    content: "";
+    position: absolute;
+    bottom: -60px; left: -60px;
+    width: 220px; height: 220px;
+    background: var(--wcfBoxAccent);
+    opacity: 0.05;
+    border-radius: 50%;
+}
+.hero .heroBadge {
+    display: inline-block;
+    background: var(--wcfBoxAccent);
+    color: #1c2833;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 4px 10px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    position: relative;
+    z-index: 1;
+}
+.hero h1 {
+    font-size: 28px;
+    margin: 0 0 8px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    position: relative;
+    z-index: 1;
+}
+.hero .heroSubtitle {
+    font-size: 15px;
+    color: #c8d1da;
+    margin: 0;
+    position: relative;
+    z-index: 1;
+    max-width: 680px;
 }
 
-/* --- Layout / Inhalt ---------------------------------------------------- */
-main {
-  max-width: var(--maxw);
-  margin: 0 auto;
-  padding: 36px 20px 60px;
+/* ---------- STEP / DOC CARDS ---------- */
+.steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin-top: 8px;
 }
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 26px 28px;
-  margin-bottom: 22px;
+.stepCard {
+    background: #fafbfc;
+    border: 1px solid var(--wcfContentBorderInner);
+    border-radius: 4px;
+    padding: 16px;
+    position: relative;
+    padding-left: 56px;
+    text-decoration: none;
+    color: var(--wcfContentText);
+    display: block;
+}
+a.stepCard:hover { background: #f0f2f4; text-decoration: none; }
+.stepCard .stepNum {
+    position: absolute;
+    left: 14px;
+    top: 14px;
+    width: 32px;
+    height: 32px;
+    background: var(--wcfBoxAccent);
+    color: #1c2833;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 15px;
+}
+.stepCard .stepTitle {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--wcfHeadlineText);
+    margin: 0 0 4px;
+}
+.stepCard .stepText {
+    font-size: 12.5px;
+    color: var(--wcfContentText);
+    line-height: 1.5;
 }
 
-h2 {
-  font-size: 1.5rem;
-  margin: 0 0 14px;
-  padding-bottom: 8px;
-  border-bottom: 3px solid var(--brand-yellow);
-  display: inline-block;
-}
-h3 { font-size: 1.15rem; margin: 22px 0 8px; color: var(--brand-blue); }
-p, li { color: var(--text); }
-a { color: var(--brand-blue); }
-
-/* Karten-Grid (Startseite) */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 18px;
-}
-.doc-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-top: 5px solid var(--brand-red);
-  border-radius: var(--radius);
-  padding: 20px;
-  text-decoration: none;
-  color: var(--text);
-  box-shadow: var(--shadow);
-  transition: transform .12s ease, box-shadow .12s ease;
-  display: block;
-}
-.doc-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
-.doc-card h3 { margin-top: 0; color: var(--brand-black); }
-.doc-card span { color: var(--text-muted); font-size: .92rem; }
-
-/* Tabellen */
+/* ---------- TABLES ---------- */
 table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 12px 0;
-  font-size: .95rem;
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 13px;
 }
 th, td {
-  text-align: left;
-  padding: 9px 12px;
-  border-bottom: 1px solid var(--border);
-  vertical-align: top;
+    text-align: left;
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--wcfContentBorderInner);
+    vertical-align: top;
 }
 thead th {
-  background: var(--brand-black);
-  color: #fff;
-  border-bottom: none;
+    background: var(--wcfNavBackground);
+    color: #fff;
+    border-bottom: none;
+    font-weight: 600;
 }
 tbody tr:nth-child(even) { background: #fafbfc; }
+
+/* ---------- CODE ---------- */
 code {
-  font-family: var(--font-mono);
-  background: #eef1f4;
-  padding: 1px 6px;
-  border-radius: 5px;
-  font-size: .9em;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    background: #f0f2f4;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 0.9em;
+    color: #04293c;
 }
 pre {
-  background: var(--brand-black);
-  color: #e9eef3;
-  padding: 16px 18px;
-  border-radius: var(--radius);
-  overflow: auto;
-  font-family: var(--font-mono);
-  font-size: .88rem;
-  line-height: 1.5;
+    background: var(--wcfNavBackground);
+    color: #e9eef3;
+    padding: 16px 18px;
+    border-radius: 4px;
+    overflow: auto;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 12.5px;
+    line-height: 1.55;
+    border: 1px solid #1a242e;
 }
 pre code { background: none; color: inherit; padding: 0; }
 
-blockquote {
-  margin: 14px 0;
-  padding: 12px 16px;
-  background: #fff8d6;
-  border-left: 4px solid var(--brand-yellow);
-  border-radius: 0 8px 8px 0;
-  color: #6b5800;
+/* ---------- NOTE BOX ---------- */
+.eligibilityNote {
+    background: #fff8e1;
+    border-left: 4px solid var(--wcfBoxAccent);
+    padding: 14px 18px;
+    font-size: 13px;
+    color: #5e4a17;
+    border-radius: 3px;
+    margin-top: 16px;
 }
+.eligibilityNote strong { color: #3e3010; }
 
-ul { padding-left: 22px; }
-
-/* --- Fußzeile ----------------------------------------------------------- */
-footer.site {
-  background: var(--brand-black);
-  color: #aeb6bf;
-  text-align: center;
-  padding: 26px 20px;
-  font-size: .9rem;
+/* ---------- FOOTER ---------- */
+.pageFooter {
+    background: #1c2833;
+    color: #b8c2cc;
+    padding: 30px 20px 18px;
+    margin-top: 30px;
+    border-top: 3px solid var(--wcfBoxAccent);
 }
-footer.site a { color: var(--brand-yellow); }
-
-@media (max-width: 600px) {
-  .hero h1 { font-size: 1.8rem; }
-  .nav-links { width: 100%; margin-left: 0; }
+.pageFooterInner { max-width: 1200px; margin: 0 auto; }
+.pageFooter ol {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    font-size: 13px;
+}
+.pageFooter a { color: #d4dce3; }
+.pageFooter a:hover { color: #fff; }
+.footerNote {
+    font-size: 11px;
+    color: #8a949e;
+    line-height: 1.6;
+    border-top: 1px solid #2c3e50;
+    padding-top: 12px;
+    margin-top: 12px;
 }
