@@ -1,10 +1,21 @@
 # BrickBank – alle Anfragen auf den Front-Controller leiten.
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    # Bestehende Dateien/Verzeichnisse (Assets) direkt ausliefern.
+
+    # Statische Assets (CSS/JS/Bilder) NIE umschreiben – direkt ausliefern.
+    RewriteRule ^assets/ - [L]
+
+    # Vorhandene Dateien/Verzeichnisse direkt ausliefern.
     RewriteCond %{REQUEST_FILENAME} -f [OR]
     RewriteCond %{REQUEST_FILENAME} -d
     RewriteRule ^ - [L]
+
     # Alles andere an index.php.
     RewriteRule ^ index.php [L]
+</IfModule>
+
+# Falls assets versehentlich durch PHP liefen: korrekten MIME-Typ sicherstellen.
+<IfModule mod_mime.c>
+    AddType text/css .css
+    AddType application/javascript .js
 </IfModule>
