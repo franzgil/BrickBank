@@ -4,6 +4,12 @@ Das Datenmodell ist auf **MySQL** ausgelegt. Es trennt den *Katalog* (welche
 Teile/Farben gibt es überhaupt) von den *Beständen* (was haben wir konkret, wo
 und wem gehört es).
 
+> **Tabellen-Präfix:** Alle physischen BrickBank-Tabellen tragen das Präfix
+> `bb_` (z. B. `bb_owner`, `bb_location`, `bb_location_label`). In der Prosa unten
+> werden die Entitäten ohne Präfix benannt; die DDL- und SQL-Blöcke verwenden den
+> physischen Namen mit `bb_`. Die WoltLab-Tabellen (`wcf1_*`) sind davon
+> unberührt.
+
 ## Entitäten im Überblick
 
 ```
@@ -102,7 +108,7 @@ Das Herzstück: „**Menge** eines **Elements** an einem **Ort**, das einem
 ## DDL-Skizze (MySQL)
 
 ```sql
-CREATE TABLE owner (
+CREATE TABLE bb_owner (
   id INT AUTO_INCREMENT PRIMARY KEY,
   type ENUM('verein','privat') NOT NULL,
   wcf_user_id INT NULL,          -- logische Referenz auf wcf1_user.userID (SSO)
@@ -112,39 +118,39 @@ CREATE TABLE owner (
   KEY idx_wcf_user (wcf_user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE location (
+CREATE TABLE bb_location (
   id INT AUTO_INCREMENT PRIMARY KEY,
   parent_id INT NULL,
   name VARCHAR(120) NOT NULL,
   kind ENUM('raum','schrank','schublade','box','fach','sonstiges') NOT NULL DEFAULT 'sonstiges',
   note VARCHAR(255) NULL,
-  FOREIGN KEY (parent_id) REFERENCES location(id) ON DELETE SET NULL
+  FOREIGN KEY (parent_id) REFERENCES bb_location(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE part (
+CREATE TABLE bb_part (
   id INT AUTO_INCREMENT PRIMARY KEY,
   part_no VARCHAR(40) NOT NULL UNIQUE,
   name VARCHAR(190) NOT NULL,
   category VARCHAR(80) NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE color (
+CREATE TABLE bb_color (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(80) NOT NULL,
   code VARCHAR(20) NULL,
   hex CHAR(6) NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE element (
+CREATE TABLE bb_element (
   id INT AUTO_INCREMENT PRIMARY KEY,
   part_id INT NOT NULL,
   color_id INT NOT NULL,
   UNIQUE KEY uq_element (part_id, color_id),
-  FOREIGN KEY (part_id) REFERENCES part(id),
-  FOREIGN KEY (color_id) REFERENCES color(id)
+  FOREIGN KEY (part_id) REFERENCES bb_part(id),
+  FOREIGN KEY (color_id) REFERENCES bb_color(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE inventory_item (
+CREATE TABLE bb_inventory_item (
   id INT AUTO_INCREMENT PRIMARY KEY,
   element_id INT NOT NULL,
   location_id INT NOT NULL,
@@ -152,9 +158,9 @@ CREATE TABLE inventory_item (
   quantity INT NOT NULL DEFAULT 0,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   UNIQUE KEY uq_item (element_id, location_id, owner_id),
-  FOREIGN KEY (element_id) REFERENCES element(id),
-  FOREIGN KEY (location_id) REFERENCES location(id),
-  FOREIGN KEY (owner_id) REFERENCES owner(id)
+  FOREIGN KEY (element_id) REFERENCES bb_element(id),
+  FOREIGN KEY (location_id) REFERENCES bb_location(id),
+  FOREIGN KEY (owner_id) REFERENCES bb_owner(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
@@ -183,26 +189,26 @@ in `location.parent_id` und ist jederzeit änderbar, ohne das Etikett neu zu dru
 ```sql
 -- Was ist in Tüte T-000345?
 SELECT p.part_no, p.name, c.name AS farbe, ii.quantity
-FROM location_label ll
-JOIN inventory_item ii ON ii.location_id = ll.location_id
-JOIN element e  ON e.id = ii.element_id
-JOIN part p     ON p.id = e.part_id
-JOIN color c    ON c.id = e.color_id
+FROM bb_location_label ll
+JOIN bb_inventory_item ii ON ii.location_id = ll.location_id
+JOIN bb_element e  ON e.id = ii.element_id
+JOIN bb_part p     ON p.id = e.part_id
+JOIN bb_color c    ON c.id = e.color_id
 WHERE ll.code = 'T-000345';
 
 -- In welcher physischen Tüte liegen unsere roten 2x4?
 SELECT ll.code, l.name AS behaelter, ii.quantity
-FROM part p
-JOIN element e        ON e.part_id = p.id
-JOIN color c          ON c.id = e.color_id
-JOIN inventory_item ii ON ii.element_id = e.id
-JOIN location l       ON l.id = ii.location_id
-JOIN location_label ll ON ll.location_id = l.id
+FROM bb_part p
+JOIN bb_element e        ON e.part_id = p.id
+JOIN bb_color c          ON c.id = e.color_id
+JOIN bb_inventory_item ii ON ii.element_id = e.id
+JOIN bb_location l       ON l.id = ii.location_id
+JOIN bb_location_label ll ON ll.location_id = l.id
 WHERE p.part_no = '3001' AND c.name = 'Bright Red';
 
 -- Bewegungshistorie eines Behälters (neueste zuerst).
 SELECT moved_at, from_code, to_code, wcf_user_id, note
-FROM location_movement
+FROM bb_location_movement
 WHERE location_id = ?
 ORDER BY moved_at DESC;
 ```

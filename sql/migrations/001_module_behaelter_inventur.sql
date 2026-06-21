@@ -7,13 +7,13 @@
 SET NAMES utf8mb4;
 
 -- 1) location.kind um Behältertypen erweitern (bestehende Werte bleiben).
-ALTER TABLE location
+ALTER TABLE bb_location
   MODIFY kind ENUM('raum','schrank','schublade','box','fach','sonstiges',
                    'container','karton','tuete')
   NOT NULL DEFAULT 'sonstiges';
 
 -- 2) Etiketten-/Behälterdaten (1:1 zu einer Behälter-location).
-CREATE TABLE location_label (
+CREATE TABLE bb_location_label (
   id INT AUTO_INCREMENT PRIMARY KEY,
   location_id INT NOT NULL,
   code VARCHAR(16) NOT NULL,        -- ortsneutraler Code, z. B. T-000345
@@ -23,12 +23,12 @@ CREATE TABLE location_label (
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY uq_label_location (location_id),
   UNIQUE KEY uq_label_code (code),
-  FOREIGN KEY (location_id) REFERENCES location(id) ON DELETE CASCADE,
-  FOREIGN KEY (owner_id) REFERENCES owner(id) ON DELETE SET NULL
+  FOREIGN KEY (location_id) REFERENCES bb_location(id) ON DELETE CASCADE,
+  FOREIGN KEY (owner_id) REFERENCES bb_owner(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 3) Bewegungshistorie (jeder Standortwechsel eines Behälters).
-CREATE TABLE location_movement (
+CREATE TABLE bb_location_movement (
   id INT AUTO_INCREMENT PRIMARY KEY,
   location_id INT NOT NULL,
   code VARCHAR(16) NOT NULL,        -- Code redundant (Historie bleibt lesbar)
@@ -41,11 +41,11 @@ CREATE TABLE location_movement (
   moved_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   KEY idx_move_location (location_id),
   KEY idx_move_time (moved_at),
-  FOREIGN KEY (location_id) REFERENCES location(id) ON DELETE CASCADE
+  FOREIGN KEY (location_id) REFERENCES bb_location(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 4) Inventurläufe.
-CREATE TABLE stocktake (
+CREATE TABLE bb_stocktake (
   id INT AUTO_INCREMENT PRIMARY KEY,
   title VARCHAR(120) NOT NULL,
   root_location_id INT NULL,        -- optional auf einen Container/Raum eingegrenzt
@@ -53,17 +53,17 @@ CREATE TABLE stocktake (
   wcf_user_id INT NULL,             -- wer hat die Inventur gestartet
   started_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   finished_at DATETIME NULL,
-  FOREIGN KEY (root_location_id) REFERENCES location(id) ON DELETE SET NULL,
-  FOREIGN KEY (owner_id) REFERENCES owner(id) ON DELETE SET NULL
+  FOREIGN KEY (root_location_id) REFERENCES bb_location(id) ON DELETE SET NULL,
+  FOREIGN KEY (owner_id) REFERENCES bb_owner(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 5) Einzelne Scans eines Inventurlaufs.
-CREATE TABLE stocktake_scan (
+CREATE TABLE bb_stocktake_scan (
   id INT AUTO_INCREMENT PRIMARY KEY,
   stocktake_id INT NOT NULL,
   code VARCHAR(16) NOT NULL,
   scanned_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   KEY idx_scan_stocktake (stocktake_id),
   KEY idx_scan_code (code),
-  FOREIGN KEY (stocktake_id) REFERENCES stocktake(id) ON DELETE CASCADE
+  FOREIGN KEY (stocktake_id) REFERENCES bb_stocktake(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

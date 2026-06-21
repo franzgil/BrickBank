@@ -110,12 +110,12 @@ Protokolliert **jeden** Standortwechsel eines Behälters lückenlos.
 ### 2.4 DDL-Skizze (an BrickBanks Stil angelehnt)
 
 ```sql
-ALTER TABLE location
+ALTER TABLE bb_location
   MODIFY kind ENUM('raum','schrank','schublade','box','fach','sonstiges',
                    'container','karton','tuete')
   NOT NULL DEFAULT 'sonstiges';
 
-CREATE TABLE location_label (
+CREATE TABLE bb_location_label (
   id INT AUTO_INCREMENT PRIMARY KEY,
   location_id INT NOT NULL,
   code VARCHAR(16) NOT NULL,
@@ -125,11 +125,11 @@ CREATE TABLE location_label (
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY uq_label_location (location_id),
   UNIQUE KEY uq_label_code (code),
-  FOREIGN KEY (location_id) REFERENCES location(id) ON DELETE CASCADE,
-  FOREIGN KEY (owner_id) REFERENCES owner(id) ON DELETE SET NULL
+  FOREIGN KEY (location_id) REFERENCES bb_location(id) ON DELETE CASCADE,
+  FOREIGN KEY (owner_id) REFERENCES bb_owner(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE location_movement (
+CREATE TABLE bb_location_movement (
   id INT AUTO_INCREMENT PRIMARY KEY,
   location_id INT NOT NULL,
   code VARCHAR(16) NOT NULL,
@@ -142,14 +142,14 @@ CREATE TABLE location_movement (
   moved_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   KEY idx_move_location (location_id),
   KEY idx_move_time (moved_at),
-  FOREIGN KEY (location_id) REFERENCES location(id) ON DELETE CASCADE
+  FOREIGN KEY (location_id) REFERENCES bb_location(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
 ### 2.5 Inventur-Tabellen (Soll-Ist-Abgleich)
 
 ```sql
-CREATE TABLE stocktake (
+CREATE TABLE bb_stocktake (
   id INT AUTO_INCREMENT PRIMARY KEY,
   title VARCHAR(120) NOT NULL,
   root_location_id INT NULL,        -- optional auf einen Container/Raum eingegrenzt
@@ -157,18 +157,18 @@ CREATE TABLE stocktake (
   wcf_user_id INT NULL,             -- wer hat die Inventur gestartet
   started_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   finished_at DATETIME NULL,
-  FOREIGN KEY (root_location_id) REFERENCES location(id) ON DELETE SET NULL,
-  FOREIGN KEY (owner_id) REFERENCES owner(id) ON DELETE SET NULL
+  FOREIGN KEY (root_location_id) REFERENCES bb_location(id) ON DELETE SET NULL,
+  FOREIGN KEY (owner_id) REFERENCES bb_owner(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE stocktake_scan (
+CREATE TABLE bb_stocktake_scan (
   id INT AUTO_INCREMENT PRIMARY KEY,
   stocktake_id INT NOT NULL,
   code VARCHAR(16) NOT NULL,
   scanned_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   KEY idx_scan_stocktake (stocktake_id),
   KEY idx_scan_code (code),
-  FOREIGN KEY (stocktake_id) REFERENCES stocktake(id) ON DELETE CASCADE
+  FOREIGN KEY (stocktake_id) REFERENCES bb_stocktake(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
@@ -232,8 +232,8 @@ move(int $locationId, ?int $newParentId, ?string $note, ?int $wcfUserId): bool
      container hat keinen Behälter-Parent (nur Raum/Schrank o. Ä. erlaubt)
   3. wenn newParentId == aktueller parent_id → return false (kein Wechsel)
   4. Transaktion:
-       UPDATE location SET parent_id = newParentId WHERE id = locationId
-       INSERT INTO location_movement (...Snapshots from/to, wcfUserId, note)
+       UPDATE bb_location SET parent_id = newParentId WHERE id = locationId
+       INSERT INTO bb_location_movement (...Snapshots from/to, wcfUserId, note)
   5. commit → true
 ```
 

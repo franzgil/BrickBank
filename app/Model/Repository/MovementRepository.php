@@ -27,9 +27,9 @@ class MovementRepository
         // Bewegten Behälter laden (inkl. Snapshot des bisherigen Orts-Codes).
         $stmt = $db->prepare(
             'SELECT l.id, l.parent_id, l.kind, ll.code, pll.code AS from_code
-             FROM location l
-             JOIN location_label ll ON ll.location_id = l.id
-             LEFT JOIN location_label pll ON pll.location_id = l.parent_id
+             FROM bb_location l
+             JOIN bb_location_label ll ON ll.location_id = l.id
+             LEFT JOIN bb_location_label pll ON pll.location_id = l.parent_id
              WHERE l.id = ? LIMIT 1'
         );
         $stmt->execute([$locationId]);
@@ -49,7 +49,7 @@ class MovementRepository
             }
             $t = $db->prepare(
                 'SELECT l.kind, ll.code
-                 FROM location l LEFT JOIN location_label ll ON ll.location_id = l.id
+                 FROM bb_location l LEFT JOIN bb_location_label ll ON ll.location_id = l.id
                  WHERE l.id = ? LIMIT 1'
             );
             $t->execute([$newParentId]);
@@ -69,11 +69,11 @@ class MovementRepository
 
         $db->beginTransaction();
         try {
-            $u = $db->prepare('UPDATE location SET parent_id = ? WHERE id = ?');
+            $u = $db->prepare('UPDATE bb_location SET parent_id = ? WHERE id = ?');
             $u->execute([$newParentId, $locationId]);
 
             $ins = $db->prepare(
-                'INSERT INTO location_movement
+                'INSERT INTO bb_location_movement
                     (location_id, code, from_parent_id, from_code, to_parent_id, to_code, wcf_user_id, note)
                  VALUES (?,?,?,?,?,?,?,?)'
             );
@@ -100,7 +100,7 @@ class MovementRepository
     {
         $stmt = Database::app()->prepare(
             'SELECT moved_at, from_code, to_code, from_parent_id, to_parent_id, wcf_user_id, note
-             FROM location_movement
+             FROM bb_location_movement
              WHERE location_id = ?
              ORDER BY moved_at DESC, id DESC'
         );

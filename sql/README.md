@@ -8,7 +8,10 @@ mysql brickbank < sql/migrations/001_module_behaelter_inventur.sql
 mysql brickbank < sql/seed.sql        # optional: Beispiel-Stammdaten
 ```
 
-- `schema.sql` — Basis-Tabellen (owner, location, part, color, element, inventory_item).
+Alle Tabellen tragen das Präfix **`bb_`** (z. B. `bb_owner`). Bereits ohne
+Präfix angelegte Tabellen lassen sich mit `sql/rename-to-bb-prefix.sql` umbenennen.
+
+- `schema.sql` — Basis-Tabellen (bb_owner, bb_location, bb_part, bb_color, bb_element, bb_inventory_item).
 - `migrations/` — inkrementelle Änderungen in Nummern-Folge. Jede Migration genau
   einmal anwenden.
 - `seed.sql` — optionale Beispieldaten (Verein-Besitzer, einige Farben).

@@ -6,10 +6,10 @@
 SET NAMES utf8mb4;
 
 -- Verein als Standard-Besitzer.
-INSERT INTO owner (type, name) VALUES ('verein', 'afol.lu');
+INSERT INTO bb_owner (type, name) VALUES ('verein', 'afol.lu');
 
 -- Ein paar gängige LEGO-Farben (Namen/Codes an BrickLink angelehnt).
-INSERT INTO color (name, code, hex) VALUES
+INSERT INTO bb_color (name, code, hex) VALUES
   ('Black',       '11', '05131d'),
   ('White',        '1', 'ffffff'),
   ('Bright Red',   '5', 'c91a09'),

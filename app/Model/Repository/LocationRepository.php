@@ -11,7 +11,7 @@ class LocationRepository
     public function find(int $id): ?array
     {
         $stmt = Database::app()->prepare(
-            'SELECT id, parent_id, name, kind, note FROM location WHERE id = ? LIMIT 1'
+            'SELECT id, parent_id, name, kind, note FROM bb_location WHERE id = ? LIMIT 1'
         );
         $stmt->execute([$id]);
         $row = $stmt->fetch();
@@ -22,7 +22,7 @@ class LocationRepository
     public function all(): array
     {
         return Database::app()
-            ->query('SELECT id, parent_id, name, kind FROM location ORDER BY kind, name')
+            ->query('SELECT id, parent_id, name, kind FROM bb_location ORDER BY kind, name')
             ->fetchAll();
     }
 
@@ -35,8 +35,8 @@ class LocationRepository
         $place = implode(',', array_fill(0, count($kinds), '?'));
         $stmt = Database::app()->prepare(
             'SELECT l.id, l.name, l.kind, ll.code
-             FROM location l
-             LEFT JOIN location_label ll ON ll.location_id = l.id
+             FROM bb_location l
+             LEFT JOIN bb_location_label ll ON ll.location_id = l.id
              WHERE l.kind IN (' . $place . ')
              ORDER BY l.kind, COALESCE(ll.code, l.name)'
         );
@@ -57,7 +57,7 @@ class LocationRepository
     public function descendantIds(int $rootId): array
     {
         $rows = Database::app()
-            ->query('SELECT id, parent_id FROM location')
+            ->query('SELECT id, parent_id FROM bb_location')
             ->fetchAll();
         $childrenOf = [];
         foreach ($rows as $r) {

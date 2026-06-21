@@ -25,7 +25,7 @@ class LabelRepository
         $db = Database::app();
         $db->beginTransaction();
         try {
-            $stmt = $db->prepare('INSERT INTO location (parent_id, name, kind, note) VALUES (?,?,?,?)');
+            $stmt = $db->prepare('INSERT INTO bb_location (parent_id, name, kind, note) VALUES (?,?,?,?)');
             $stmt->execute([$parentId, $name, $kind, $note]);
             $locationId = (int) $db->lastInsertId();
 
@@ -33,7 +33,7 @@ class LabelRepository
             $code = CodeGenerator::format($kind, $seq);
 
             $stmt = $db->prepare(
-                'INSERT INTO location_label (location_id, code, code_seq, owner_id) VALUES (?,?,?,?)'
+                'INSERT INTO bb_location_label (location_id, code, code_seq, owner_id) VALUES (?,?,?,?)'
             );
             $stmt->execute([$locationId, $code, $seq, $ownerId]);
 
@@ -50,8 +50,8 @@ class LabelRepository
     {
         $stmt = $db->prepare(
             'SELECT COALESCE(MAX(ll.code_seq),0)+1
-             FROM location_label ll
-             JOIN location l ON l.id = ll.location_id
+             FROM bb_location_label ll
+             JOIN bb_location l ON l.id = ll.location_id
              WHERE l.kind = ? FOR UPDATE'
         );
         $stmt->execute([$kind]);
@@ -65,11 +65,11 @@ class LabelRepository
                        ll.code, ll.owner_id,
                        p.name AS parent_name, pll.code AS parent_code,
                        o.name AS owner_name
-                FROM location_label ll
-                JOIN location l        ON l.id = ll.location_id
-                LEFT JOIN location p   ON p.id = l.parent_id
-                LEFT JOIN location_label pll ON pll.location_id = p.id
-                LEFT JOIN owner o      ON o.id = ll.owner_id';
+                FROM bb_location_label ll
+                JOIN bb_location l        ON l.id = ll.location_id
+                LEFT JOIN bb_location p   ON p.id = l.parent_id
+                LEFT JOIN bb_location_label pll ON pll.location_id = p.id
+                LEFT JOIN bb_owner o      ON o.id = ll.owner_id';
         $params = [];
         if ($kind !== null) {
             $sql .= ' WHERE l.kind = ?';
@@ -88,10 +88,10 @@ class LabelRepository
             'SELECT l.id, l.name, l.kind, l.parent_id, l.note,
                     ll.code, ll.code_seq, ll.owner_id, ll.rfid_epc,
                     p.name AS parent_name, p.kind AS parent_kind, pll.code AS parent_code
-             FROM location l
-             JOIN location_label ll ON ll.location_id = l.id
-             LEFT JOIN location p   ON p.id = l.parent_id
-             LEFT JOIN location_label pll ON pll.location_id = p.id
+             FROM bb_location l
+             JOIN bb_location_label ll ON ll.location_id = l.id
+             LEFT JOIN bb_location p   ON p.id = l.parent_id
+             LEFT JOIN bb_location_label pll ON pll.location_id = p.id
              WHERE l.id = ? LIMIT 1'
         );
         $stmt->execute([$id]);
@@ -104,8 +104,8 @@ class LabelRepository
     {
         $stmt = Database::app()->prepare(
             'SELECT l.id, l.name, l.kind, l.parent_id, ll.code, ll.owner_id
-             FROM location_label ll
-             JOIN location l ON l.id = ll.location_id
+             FROM bb_location_label ll
+             JOIN bb_location l ON l.id = ll.location_id
              WHERE ll.code = ? LIMIT 1'
         );
         $stmt->execute([$code]);
@@ -118,10 +118,10 @@ class LabelRepository
     {
         $stmt = Database::app()->prepare(
             'SELECT p.part_no, p.name AS part_name, c.name AS color_name, ii.quantity
-             FROM inventory_item ii
-             JOIN element e ON e.id = ii.element_id
-             JOIN part p    ON p.id = e.part_id
-             JOIN color c   ON c.id = e.color_id
+             FROM bb_inventory_item ii
+             JOIN bb_element e ON e.id = ii.element_id
+             JOIN bb_part p    ON p.id = e.part_id
+             JOIN bb_color c   ON c.id = e.color_id
              WHERE ii.location_id = ?
              ORDER BY p.name, c.name'
         );
@@ -135,10 +135,10 @@ class LabelRepository
         return Database::app()->query(
             'SELECT l.id, l.name, l.kind, ll.code,
                     p.name AS parent_name, pll.code AS parent_code
-             FROM location_label ll
-             JOIN location l      ON l.id = ll.location_id
-             LEFT JOIN location p ON p.id = l.parent_id
-             LEFT JOIN location_label pll ON pll.location_id = p.id
+             FROM bb_location_label ll
+             JOIN bb_location l      ON l.id = ll.location_id
+             LEFT JOIN bb_location p ON p.id = l.parent_id
+             LEFT JOIN bb_location_label pll ON pll.location_id = p.id
              ORDER BY l.kind, ll.code'
         )->fetchAll();
     }

@@ -24,7 +24,7 @@ class StocktakeRepository
     {
         $db = Database::app();
         $stmt = $db->prepare(
-            'INSERT INTO stocktake (title, root_location_id, owner_id, wcf_user_id) VALUES (?,?,?,?)'
+            'INSERT INTO bb_stocktake (title, root_location_id, owner_id, wcf_user_id) VALUES (?,?,?,?)'
         );
         $stmt->execute([$title, $rootLocationId, $ownerId, $wcfUserId]);
         return (int) $db->lastInsertId();
@@ -34,7 +34,7 @@ class StocktakeRepository
     {
         $stmt = Database::app()->prepare(
             'SELECT id, title, root_location_id, owner_id, wcf_user_id, started_at, finished_at
-             FROM stocktake WHERE id = ? LIMIT 1'
+             FROM bb_stocktake WHERE id = ? LIMIT 1'
         );
         $stmt->execute([$id]);
         $row = $stmt->fetch();
@@ -45,15 +45,15 @@ class StocktakeRepository
     {
         return Database::app()->query(
             'SELECT s.id, s.title, s.started_at, s.finished_at,
-                    (SELECT COUNT(*) FROM stocktake_scan ss WHERE ss.stocktake_id = s.id) AS scan_count
-             FROM stocktake s ORDER BY s.started_at DESC'
+                    (SELECT COUNT(*) FROM bb_stocktake_scan ss WHERE ss.stocktake_id = s.id) AS scan_count
+             FROM bb_stocktake s ORDER BY s.started_at DESC'
         )->fetchAll();
     }
 
     public function addScan(int $stocktakeId, string $code): void
     {
         $stmt = Database::app()->prepare(
-            'INSERT INTO stocktake_scan (stocktake_id, code) VALUES (?,?)'
+            'INSERT INTO bb_stocktake_scan (stocktake_id, code) VALUES (?,?)'
         );
         $stmt->execute([$stocktakeId, $code]);
     }
@@ -61,14 +61,14 @@ class StocktakeRepository
     public function finish(int $id): void
     {
         $stmt = Database::app()->prepare(
-            'UPDATE stocktake SET finished_at = CURRENT_TIMESTAMP WHERE id = ? AND finished_at IS NULL'
+            'UPDATE bb_stocktake SET finished_at = CURRENT_TIMESTAMP WHERE id = ? AND finished_at IS NULL'
         );
         $stmt->execute([$id]);
     }
 
     public function scanCount(int $id): int
     {
-        $stmt = Database::app()->prepare('SELECT COUNT(*) FROM stocktake_scan WHERE stocktake_id = ?');
+        $stmt = Database::app()->prepare('SELECT COUNT(*) FROM bb_stocktake_scan WHERE stocktake_id = ?');
         $stmt->execute([$id]);
         return (int) $stmt->fetchColumn();
     }
@@ -77,7 +77,7 @@ class StocktakeRepository
     {
         $limit = max(1, min(200, $limit));
         $stmt = Database::app()->prepare(
-            'SELECT code, scanned_at FROM stocktake_scan WHERE stocktake_id = ? ORDER BY id DESC LIMIT ' . $limit
+            'SELECT code, scanned_at FROM bb_stocktake_scan WHERE stocktake_id = ? ORDER BY id DESC LIMIT ' . $limit
         );
         $stmt->execute([$id]);
         return $stmt->fetchAll();
@@ -103,8 +103,8 @@ class StocktakeRepository
         }
 
         $sql = 'SELECT ll.code, l.name
-                FROM location_label ll
-                JOIN location l ON l.id = ll.location_id';
+                FROM bb_location_label ll
+                JOIN bb_location l ON l.id = ll.location_id';
         if ($where) {
             $sql .= ' WHERE ' . implode(' AND ', $where);
         }
@@ -121,7 +121,7 @@ class StocktakeRepository
     /** Distinct gescannte Codes (Ist). */
     private function istCodes(int $id): array
     {
-        $stmt = Database::app()->prepare('SELECT DISTINCT code FROM stocktake_scan WHERE stocktake_id = ?');
+        $stmt = Database::app()->prepare('SELECT DISTINCT code FROM bb_stocktake_scan WHERE stocktake_id = ?');
         $stmt->execute([$id]);
         return $stmt->fetchAll(PDO::FETCH_COLUMN);
     }
