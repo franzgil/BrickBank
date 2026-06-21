@@ -157,3 +157,52 @@ CREATE TABLE inventory_item (
   FOREIGN KEY (owner_id) REFERENCES owner(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
+
+---
+
+## Modul Behälter/Inventur (Migration 001)
+
+Physische Behälter werden als spezialisierte `location` geführt
+(`kind IN ('container','karton','tuete')`), ergänzt um etiketten- und
+inventurspezifische Tabellen. Vollständige Begründung und DDL:
+[MODUL-BEHAELTER-INVENTUR.md](MODUL-BEHAELTER-INVENTUR.md),
+Skript `sql/migrations/001_module_behaelter_inventur.sql`.
+
+| Tabelle | Zweck |
+|---------|-------|
+| `location_label` | 1:1 zu einer Behälter-`location`: ortsneutraler `code` (z. B. `T-000345`), `code_seq`, optionales `owner_id`, optionale `rfid_epc`. |
+| `location_movement` | lückenlose Bewegungshistorie je Behälter; `from_*`/`to_*` als Snapshot, `wcf_user_id` = wer. |
+| `stocktake` | Inventurlauf, optional auf `root_location_id`/`owner_id` eingegrenzt. |
+| `stocktake_scan` | einzelne gescannte Codes je Lauf (Ist-Menge). |
+
+**Schlüsselprinzip:** Der `code` ist **ortsneutral** — der Standort steckt allein
+in `location.parent_id` und ist jederzeit änderbar, ohne das Etikett neu zu drucken.
+
+### Beispielabfragen
+
+```sql
+-- Was ist in Tüte T-000345?
+SELECT p.part_no, p.name, c.name AS farbe, ii.quantity
+FROM location_label ll
+JOIN inventory_item ii ON ii.location_id = ll.location_id
+JOIN element e  ON e.id = ii.element_id
+JOIN part p     ON p.id = e.part_id
+JOIN color c    ON c.id = e.color_id
+WHERE ll.code = 'T-000345';
+
+-- In welcher physischen Tüte liegen unsere roten 2x4?
+SELECT ll.code, l.name AS behaelter, ii.quantity
+FROM part p
+JOIN element e        ON e.part_id = p.id
+JOIN color c          ON c.id = e.color_id
+JOIN inventory_item ii ON ii.element_id = e.id
+JOIN location l       ON l.id = ii.location_id
+JOIN location_label ll ON ll.location_id = l.id
+WHERE p.part_no = '3001' AND c.name = 'Bright Red';
+
+-- Bewegungshistorie eines Behälters (neueste zuerst).
+SELECT moved_at, from_code, to_code, wcf_user_id, note
+FROM location_movement
+WHERE location_id = ?
+ORDER BY moved_at DESC;
+```
