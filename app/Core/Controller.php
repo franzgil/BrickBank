@@ -25,7 +25,17 @@ abstract class Controller
         if (!array_key_exists('title', $data)) {
             $data['title'] = 'BrickBank';
         }
+        if (!array_key_exists('flash', $data)) {
+            $data['flash'] = $_SESSION['flash'] ?? null;
+            unset($_SESSION['flash']);
+        }
         View::render($template, $data, $layout);
+    }
+
+    /** Flash-Meldung für die nächste Anfrage (nach Redirect) hinterlegen. */
+    protected function flash(string $type, string $message): void
+    {
+        $_SESSION['flash'] = ['type' => $type, 'message' => $message];
     }
 
     /** Erzwingt einen eingeloggten Benutzer (sonst Redirect zur WSC-Anmeldung). */
