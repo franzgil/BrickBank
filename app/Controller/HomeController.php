@@ -132,6 +132,36 @@ class HomeController extends Controller
                 }
             }
 
+            echo "\n== Spalten & Beispiel-Formate ==\n";
+            foreach (['user_session', 'session'] as $t) {
+                echo '  ' . $prefix . $t . ' Spalten: ';
+                try {
+                    $cols = \App\Core\Database::wcf()->query('SHOW COLUMNS FROM ' . $prefix . $t)
+                        ->fetchAll(\PDO::FETCH_COLUMN);
+                    echo implode(', ', $cols) . "\n";
+                } catch (\Throwable $e) {
+                    echo "Fehler\n";
+                    continue;
+                }
+                try {
+                    $sid = \App\Core\Database::wcf()->query(
+                        'SELECT sessionID FROM ' . $prefix . $t
+                        . " WHERE sessionID IS NOT NULL AND sessionID <> '' LIMIT 1"
+                    )->fetchColumn();
+                    if ($sid !== false) {
+                        $s = (string) $sid;
+                        $cls = ctype_xdigit($s) ? 'hex'
+                            : (preg_match('~^[A-Za-z0-9+/=._-]+$~', $s) ? 'base64ish' : 'sonstiges');
+                        echo '    Beispiel-sessionID: len=' . strlen($s) . ', ' . $cls
+                            . (strpos($s, '-') !== false ? ', enthält "-"' : '') . "\n";
+                    } else {
+                        echo "    (keine sessionID-Beispiele)\n";
+                    }
+                } catch (\Throwable $e) {
+                    echo '    sessionID? ' . $e->getMessage() . "\n";
+                }
+            }
+
             echo "\n== Ergebnis ==\n";
             $u = \App\Integration\WcfSession::user();
             echo '  WcfSession::user() → ' . ($u ? ('userID=' . $u->userId . ' (' . $u->username . ')') : 'null') . "\n";
