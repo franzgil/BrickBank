@@ -26,6 +26,7 @@ use App\Service\ContainerRules;
 
     <p style="margin-top:14px">
       <?php if ($currentUser !== null): ?>
+        <a class="btn btn-sm btn-accent" href="<?= e(base_url('container/' . $container['id'] . '/add')) ?>">+ Bestand erfassen</a>
         <a class="btn btn-sm" href="<?= e(base_url('move?code=' . urlencode($container['code']))) ?>">Umräumen</a>
       <?php endif; ?>
       <a class="btn-ghost btn-sm" href="<?= e(base_url('container/' . $container['id'] . '/history')) ?>">Verlauf</a>
