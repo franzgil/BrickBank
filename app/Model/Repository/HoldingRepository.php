@@ -1,0 +1,118 @@
+<?php
+namespace App\Model\Repository;
+
+use App\Core\Database;
+
+/**
+ * Bestand (bb_holding). Mengen werden ausschließlich über den StockService
+ * geändert (der zugleich eine Bewegung protokolliert). Lesezugriffe
+ * berücksichtigen die Sichtbarkeit (privat/intern/verein).
+ */
+class HoldingRepository
+{
+    /** Sichtbarkeits-Bedingung: nur eigener privat-Bestand, sonst intern/verein. */
+    private function visClause(string $h = 'h', string $o = 'o'): string
+    {
+        return '(' . $h . ".visibility <> 'privat' OR " . $o . '.wcf_user_id = ?)';
+    }
+
+    public function findExact(int $itemId, int $locationId, int $ownerId, string $cond): ?array
+    {
+        $stmt = Database::app()->prepare(
+            'SELECT id, quantity, visibility FROM bb_holding
+             WHERE item_id = ? AND location_id = ? AND owner_id = ? AND cond = ? LIMIT 1'
+        );
+        $stmt->execute([$itemId, $locationId, $ownerId, $cond]);
+        $row = $stmt->fetch();
+        return $row ?: null;
+    }
+
+    /**
+     * Saldo einer Position um $delta verändern (legt sie bei Bedarf an, nie < 0).
+     * Visibility wird nur beim Anlegen gesetzt, nicht bei Folgebuchungen.
+     * Gibt die neue Menge zurück. NUR aus dem StockService aufrufen.
+     */
+    public function applyDelta(int $itemId, int $locationId, int $ownerId, string $cond, string $visibility, int $delta): int
+    {
+        $db = Database::app();
+        $db->prepare(
+            'INSERT INTO bb_holding (item_id, location_id, owner_id, cond, visibility, quantity)
+             VALUES (?,?,?,?,?, GREATEST(?,0))
+             ON DUPLICATE KEY UPDATE quantity = GREATEST(quantity + ?, 0)'
+        )->execute([$itemId, $locationId, $ownerId, $cond, $visibility, $delta, $delta]);
+
+        $stmt = $db->prepare(
+            'SELECT quantity FROM bb_holding
+             WHERE item_id = ? AND location_id = ? AND owner_id = ? AND cond = ? LIMIT 1'
+        );
+        $stmt->execute([$itemId, $locationId, $ownerId, $cond]);
+        return (int) $stmt->fetchColumn();
+    }
+
+    /** Setzt die Sichtbarkeit einer Position. */
+    public function setVisibility(int $holdingId, string $visibility): void
+    {
+        Database::app()->prepare('UPDATE bb_holding SET visibility = ? WHERE id = ?')
+            ->execute([$visibility, $holdingId]);
+    }
+
+    /** Inhalt eines Ortes (sichtbar für $viewer), inkl. Item-/Besitzerdaten. */
+    public function contentsOfLocation(int $locationId, ?int $viewer): array
+    {
+        $stmt = Database::app()->prepare(
+            "SELECT h.id, h.quantity, h.cond, h.visibility,
+                    o.id AS owner_id, o.name AS owner_name, o.type AS owner_type,
+                    i.id AS item_id, i.type AS item_type, i.part_num,
+                    rp.name AS part_name, rc.name AS color_name
+             FROM bb_holding h
+             JOIN bb_item  i ON i.id = h.item_id
+             JOIN bb_owner o ON o.id = h.owner_id
+             LEFT JOIN rb_parts  rp ON i.type = 'element' AND rp.part_num = i.part_num
+             LEFT JOIN rb_colors rc ON i.type = 'element' AND rc.id = i.color_id
+             WHERE h.location_id = ? AND " . $this->visClause() . "
+             ORDER BY rp.name, rc.name, h.cond"
+        );
+        $stmt->execute([$locationId, $viewer]);
+        return $stmt->fetchAll();
+    }
+
+    /** Wo liegt ein Item (sichtbar für $viewer)? */
+    public function locationsForItem(int $itemId, ?int $viewer): array
+    {
+        $stmt = Database::app()->prepare(
+            'SELECT h.quantity, h.cond, h.visibility,
+                    l.id AS location_id, l.name AS location_name,
+                    ll.code AS location_code,
+                    o.name AS owner_name, o.type AS owner_type
+             FROM bb_holding h
+             JOIN bb_owner o ON o.id = h.owner_id
+             JOIN bb_location l ON l.id = h.location_id
+             LEFT JOIN bb_location_label ll ON ll.location_id = l.id
+             WHERE h.item_id = ? AND ' . $this->visClause() . '
+             ORDER BY ll.code, l.name'
+        );
+        $stmt->execute([$itemId, $viewer]);
+        return $stmt->fetchAll();
+    }
+
+    /** Sichtbarer Gesamtbestand eines Items. */
+    public function onHandByItem(int $itemId, ?int $viewer): int
+    {
+        $stmt = Database::app()->prepare(
+            'SELECT COALESCE(SUM(h.quantity),0)
+             FROM bb_holding h JOIN bb_owner o ON o.id = h.owner_id
+             WHERE h.item_id = ? AND ' . $this->visClause() . ''
+        );
+        $stmt->execute([$itemId, $viewer]);
+        return (int) $stmt->fetchColumn();
+    }
+
+    /**
+     * Verfügbarer Bestand = Gesamtbestand − reserviert.
+     * Reservierungen (Projekte/Verleih) kommen in späteren Phasen; aktuell 0.
+     */
+    public function availableByItem(int $itemId, ?int $viewer): int
+    {
+        return $this->onHandByItem($itemId, $viewer); // − reserviert (Phase C/D)
+    }
+}

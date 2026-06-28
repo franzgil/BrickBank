@@ -1,9 +1,8 @@
 <?php
 /** @var array $container @var string $q @var array $results @var array|null $part
- *  @var array $colors @var array $owners @var string $csrf */
+ *  @var array $colors @var string $csrf @var string $memberName
+ *  @var string|null $vereinName @var bool $canVerein */
 use App\Service\ContainerRules;
-
-$defaultOwner = $container['owner_id'] ?? null;
 ?>
 <div class="breadcrumbs">
   <a href="<?= e(base_url('/')) ?>">Start</a><span class="sep">›</span>
@@ -72,19 +71,36 @@ $defaultOwner = $container['owner_id'] ?? null;
       </div>
 
       <div class="formRow">
+        <label for="cond">Zustand</label>
+        <select id="cond" name="cond">
+          <option value="gebraucht">gebraucht</option>
+          <option value="neu">neu</option>
+        </select>
+      </div>
+
+      <div class="formRow">
         <label for="quantity">Menge</label>
         <input type="number" id="quantity" name="quantity" min="1" value="1" required style="max-width:160px">
       </div>
 
       <div class="formRow">
-        <label for="owner_id">Besitzer</label>
-        <select id="owner_id" name="owner_id" required>
-          <?php foreach ($owners as $o): ?>
-            <option value="<?= e($o['id']) ?>" <?= ((string) $defaultOwner === (string) $o['id']) ? 'selected' : '' ?>>
-              <?= e($o['name']) ?> (<?= e($o['type']) ?>)
-            </option>
-          <?php endforeach; ?>
+        <label for="owner_scope">Besitzer</label>
+        <select id="owner_scope" name="owner_scope">
+          <option value="mein">Mein Bestand (<?= e($memberName) ?>)</option>
+          <?php if ($canVerein && $vereinName !== null): ?>
+            <option value="verein">Verein (<?= e($vereinName) ?>)</option>
+          <?php endif; ?>
         </select>
+      </div>
+
+      <div class="formRow">
+        <label for="visibility">Sichtbarkeit</label>
+        <select id="visibility" name="visibility">
+          <option value="privat">privat (nur ich)</option>
+          <option value="intern">intern (für Mitglieder sichtbar)</option>
+          <option value="verein">für Verein bereitgestellt</option>
+        </select>
+        <div class="hint">Gilt für „Mein Bestand". Vereinsbestand ist immer mindestens intern sichtbar.</div>
       </div>
 
       <button type="submit" class="btn btn-accent">Bestand buchen</button>

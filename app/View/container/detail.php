@@ -41,14 +41,17 @@ use App\Service\ContainerRules;
       <p>Für diesen Behälter sind noch keine Bestandsposten erfasst.</p>
     <?php else: ?>
       <table>
-        <thead><tr><th>Teil-Nr.</th><th>Teil</th><th>Farbe</th><th>Menge</th></tr></thead>
+        <thead><tr><th>Teil-Nr.</th><th>Teil</th><th>Farbe</th><th>Zustand</th><th>Menge</th><th>Besitzer</th><th>Sichtbarkeit</th></tr></thead>
         <tbody>
           <?php foreach ($contents as $row): ?>
             <tr>
-              <td><?= e($row['part_no']) ?></td>
-              <td><?= e($row['part_name']) ?></td>
-              <td><?= e($row['color_name']) ?></td>
+              <td><?= e($row['part_num'] ?? '–') ?></td>
+              <td><?= e($row['part_name'] ?? ('(' . $row['item_type'] . ')')) ?></td>
+              <td><?= e($row['color_name'] ?? '–') ?></td>
+              <td><?= e($row['cond']) ?></td>
               <td><?= e($row['quantity']) ?></td>
+              <td><?= e($row['owner_name']) ?></td>
+              <td><?= e($row['visibility']) ?></td>
             </tr>
           <?php endforeach; ?>
         </tbody>

@@ -122,7 +122,7 @@ class CatalogRepository
         return $val !== false ? (string) $val : null;
     }
 
-    /** Anreicherung eines bb_element (Teil+Farbe) mit Katalog-Details. */
+    /** Anreicherung eines Elements (Teil+Farbe) mit Katalog-Details. */
     public function elementDetail(string $partNum, int $colorId): ?array
     {
         $stmt = Database::app()->prepare(

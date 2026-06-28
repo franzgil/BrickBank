@@ -113,25 +113,6 @@ class LabelRepository
         return $row ?: null;
     }
 
-    /**
-     * Inhalt eines Behälters (Bestandsposten je Element).
-     * Teil-/Farbnamen kommen aus dem Rebrickable-Katalog (rb_parts/rb_colors).
-     */
-    public function contents(int $locationId): array
-    {
-        $stmt = Database::app()->prepare(
-            'SELECT e.part_num AS part_no, rp.name AS part_name, rc.name AS color_name, ii.quantity
-             FROM bb_inventory_item ii
-             JOIN bb_element e ON e.id = ii.element_id
-             JOIN rb_parts rp  ON rp.part_num = e.part_num
-             JOIN rb_colors rc ON rc.id = e.color_id
-             WHERE ii.location_id = ?
-             ORDER BY rp.name, rc.name'
-        );
-        $stmt->execute([$locationId]);
-        return $stmt->fetchAll();
-    }
-
     /** Alle etikettierten Behälter (für Etikettenbogen/CSV). */
     public function allLabels(): array
     {

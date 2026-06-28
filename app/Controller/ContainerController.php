@@ -3,6 +3,8 @@ namespace App\Controller;
 
 use App\Core\Controller;
 use App\Core\Csrf;
+use App\Integration\WcfSession;
+use App\Model\Repository\HoldingRepository;
 use App\Model\Repository\LabelRepository;
 use App\Model\Repository\LocationRepository;
 use App\Model\Repository\OwnerRepository;
@@ -17,6 +19,8 @@ class ContainerController extends Controller
     private $locations;
     /** @var OwnerRepository */
     private $owners;
+    /** @var HoldingRepository */
+    private $holdings;
 
     public function __construct()
     {
@@ -24,6 +28,7 @@ class ContainerController extends Controller
         $this->labels    = new LabelRepository();
         $this->locations = new LocationRepository();
         $this->owners    = new OwnerRepository();
+        $this->holdings  = new HoldingRepository();
     }
 
     /** Liste aller Behälter, optional auf einen Typ gefiltert (?kind=). */
@@ -98,11 +103,12 @@ class ContainerController extends Controller
             echo 'Behälter nicht gefunden';
             return;
         }
+        $viewer = WcfSession::user();
         $this->render('container/detail', [
             'title'     => $container['code'],
             'nav'       => 'container',
             'container' => $container,
-            'contents'  => $this->labels->contents((int) $id),
+            'contents'  => $this->holdings->contentsOfLocation((int) $id, $viewer ? $viewer->userId : null),
         ]);
     }
 

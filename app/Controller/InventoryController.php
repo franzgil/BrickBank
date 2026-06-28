@@ -3,13 +3,16 @@ namespace App\Controller;
 
 use App\Core\Controller;
 use App\Core\Csrf;
+use App\Integration\WcfSession;
 use App\Model\Repository\CatalogRepository;
-use App\Model\Repository\InventoryRepository;
+use App\Model\Repository\ItemRepository;
 use App\Model\Repository\LabelRepository;
 use App\Model\Repository\OwnerRepository;
+use App\Service\StockService;
 
 /**
- * Bestand zu einem Behälter erfassen (Teil aus Rebrickable + Farbe + Menge).
+ * Bestand zu einem Behälter erfassen: Teil (Rebrickable) + Farbe + Zustand
+ * + Menge, mit Besitzer (Mein Bestand / Verein) und Sichtbarkeit.
  */
 class InventoryController extends Controller
 {
@@ -17,24 +20,26 @@ class InventoryController extends Controller
     private $labels;
     /** @var CatalogRepository */
     private $catalog;
-    /** @var InventoryRepository */
-    private $inventory;
+    /** @var ItemRepository */
+    private $items;
     /** @var OwnerRepository */
     private $owners;
+    /** @var StockService */
+    private $stock;
 
     public function __construct()
     {
         parent::__construct();
-        $this->labels    = new LabelRepository();
-        $this->catalog   = new CatalogRepository();
-        $this->inventory = new InventoryRepository();
-        $this->owners    = new OwnerRepository();
+        $this->labels  = new LabelRepository();
+        $this->catalog = new CatalogRepository();
+        $this->items   = new ItemRepository();
+        $this->owners  = new OwnerRepository();
+        $this->stock   = new StockService();
     }
 
-    /** Erfassungs-Formular: Teil suchen → Teil gewählt → Farbe/Menge. */
     public function add($id): void
     {
-        $this->requireLogin();
+        $user = $this->requireLogin();
         $container = $this->labels->find((int) $id);
         if ($container === null) {
             http_response_code(404);
@@ -44,8 +49,9 @@ class InventoryController extends Controller
 
         $q       = trim((string) $this->request->get('q', ''));
         $partNum = trim((string) $this->request->get('part', ''));
+        $limit   = 200;
 
-        $limit = 200;
+        $verein = $this->owners->verein();
         $data = [
             'title'       => 'Bestand erfassen · ' . $container['code'],
             'nav'         => 'container',
@@ -56,7 +62,9 @@ class InventoryController extends Controller
             'resultLimit' => $limit,
             'part'        => null,
             'colors'      => [],
-            'owners'      => $this->owners->all(),
+            'memberName'  => $user->username,
+            'vereinName'  => $verein ? $verein['name'] : null,
+            'canVerein'   => $user->canWrite(),
             'csrf'        => Csrf::token(),
         ];
 
@@ -77,10 +85,9 @@ class InventoryController extends Controller
         $this->render('inventory/add', $data);
     }
 
-    /** Bestand buchen. */
     public function store($id): void
     {
-        $this->requireWrite();
+        $user = $this->requireLogin();
         Csrf::validate($this->request->post('csrf_token'));
 
         $container = $this->labels->find((int) $id);
@@ -90,10 +97,14 @@ class InventoryController extends Controller
             return;
         }
 
-        $partNum = trim((string) $this->request->post('part_num', ''));
-        $colorId = (int) $this->request->post('color_id', 0);
-        $qty     = (int) $this->request->post('quantity', 0);
-        $ownerId = (int) $this->request->post('owner_id', 0);
+        $partNum    = trim((string) $this->request->post('part_num', ''));
+        $colorId    = (int) $this->request->post('color_id', 0);
+        $qty        = (int) $this->request->post('quantity', 0);
+        $cond       = (string) $this->request->post('cond', 'gebraucht');
+        $ownerScope = (string) $this->request->post('owner_scope', 'mein');   // mein|verein
+        $visibility = (string) $this->request->post('visibility', 'privat');
+
+        $back = base_url('container/' . $container['id'] . '/add?part=' . urlencode($partNum));
 
         $errors = [];
         if ($partNum === '' || $this->catalog->findPart($partNum) === null) {
@@ -105,19 +116,41 @@ class InventoryController extends Controller
         if ($qty < 1) {
             $errors[] = 'Menge muss mindestens 1 sein.';
         }
-        if ($ownerId <= 0 || $this->owners->find($ownerId) === null) {
-            $errors[] = 'Bitte einen gültigen Besitzer wählen.';
+        if (!in_array($cond, ['neu', 'gebraucht'], true)) {
+            $errors[] = 'Ungültiger Zustand.';
         }
-
         if ($errors) {
             $this->flash('error', implode(' ', $errors));
-            $this->redirect(base_url('container/' . $container['id'] . '/add?part=' . urlencode($partNum)));
+            $this->redirect($back);
         }
 
-        $elementId = $this->inventory->findOrCreateElement($partNum, $colorId);
-        $this->inventory->addStock($elementId, (int) $container['id'], $ownerId, $qty);
+        // Besitzer + Sichtbarkeit bestimmen.
+        if ($ownerScope === 'verein') {
+            if (!$user->canWrite()) {
+                $this->flash('error', 'Keine Berechtigung für Vereinsbestand.');
+                $this->redirect($back);
+            }
+            $verein = $this->owners->verein();
+            if ($verein === null) {
+                $this->flash('error', 'Kein Vereins-Besitzer angelegt (seed.sql).');
+                $this->redirect($back);
+            }
+            $ownerId    = (int) $verein['id'];
+            $visibility = in_array($visibility, ['intern', 'verein'], true) ? $visibility : 'intern';
+        } else {
+            $ownerId    = $this->owners->findOrCreateForWcfUser($user->userId, $user->username, $user->email);
+            $visibility = in_array($visibility, ['privat', 'intern', 'verein'], true) ? $visibility : 'privat';
+        }
 
-        $this->flash('success', $qty . '× ' . $partNum . ' erfasst in ' . $container['code'] . '.');
+        $itemId = $this->items->findOrCreateElement($partNum, $colorId);
+        try {
+            $this->stock->add($itemId, (int) $container['id'], $ownerId, $cond, $visibility, $qty, $user->userId, null);
+        } catch (\Throwable $e) {
+            $this->flash('error', 'Buchung fehlgeschlagen: ' . $e->getMessage());
+            $this->redirect($back);
+        }
+
+        $this->flash('success', $qty . '× ' . $partNum . ' (' . $cond . ') erfasst in ' . $container['code'] . '.');
         $this->redirect(base_url('container/' . $container['id']));
     }
 }
