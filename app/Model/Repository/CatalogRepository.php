@@ -10,33 +10,58 @@ use App\Core\Database;
  */
 class CatalogRepository
 {
-    /** Teile-Suche nach Teilenummer oder Name. */
+    /** Teile-Suche nach Teilenummer oder Name (token- und leerzeichentolerant). */
     public function searchParts(string $query, int $limit = 200): array
     {
         $limit = max(1, min(1000, $limit));
-        $like  = '%' . $query . '%';
-        $stmt = Database::app()->prepare(
-            'SELECT p.part_num, p.name, pc.name AS category
-             FROM rb_parts p
-             LEFT JOIN rb_part_categories pc ON pc.id = p.part_cat_id
-             WHERE p.part_num = ? OR p.part_num LIKE ? OR p.name LIKE ?
-             ORDER BY (p.part_num = ?) DESC, p.name
-             LIMIT ' . $limit
-        );
-        $stmt->execute([$query, $like, $like, $query]);
+        list($where, $params) = $this->buildSearch($query);
+
+        $params[] = trim($query); // für die Sortierung (exakte Teilenummer zuerst)
+        $sql = 'SELECT p.part_num, p.name, pc.name AS category
+                FROM rb_parts p
+                LEFT JOIN rb_part_categories pc ON pc.id = p.part_cat_id
+                WHERE ' . $where . '
+                ORDER BY (p.part_num = ?) DESC, p.name
+                LIMIT ' . $limit;
+        $stmt = Database::app()->prepare($sql);
+        $stmt->execute($params);
         return $stmt->fetchAll();
     }
 
     /** Gesamtzahl der Treffer zu einer Teile-Suche (für die Anzeige). */
     public function countParts(string $query): int
     {
-        $like = '%' . $query . '%';
-        $stmt = Database::app()->prepare(
-            'SELECT COUNT(*) FROM rb_parts
-             WHERE part_num = ? OR part_num LIKE ? OR name LIKE ?'
-        );
-        $stmt->execute([$query, $like, $like]);
+        list($where, $params) = $this->buildSearch($query);
+        $stmt = Database::app()->prepare('SELECT COUNT(*) FROM rb_parts p WHERE ' . $where);
+        $stmt->execute($params);
         return (int) $stmt->fetchColumn();
+    }
+
+    /**
+     * Baut die WHERE-Bedingung für die Teile-Suche.
+     * Jeder Suchbegriff (durch Leerzeichen getrennt) muss vorkommen –
+     * entweder in der Teilenummer oder im Namen, wobei beim Namen
+     * Leerzeichen ignoriert werden („2x4" matcht „2 x 4").
+     *
+     * @return array{0:string,1:array}
+     */
+    private function buildSearch(string $query): array
+    {
+        $tokens = preg_split('~\s+~', trim($query), -1, PREG_SPLIT_NO_EMPTY);
+        if (empty($tokens)) {
+            return ['1=0', []];
+        }
+        $clauses = [];
+        $params  = [];
+        foreach ($tokens as $t) {
+            // LIKE-Sonderzeichen entschärfen.
+            $esc  = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $t);
+            $like = '%' . $esc . '%';
+            $clauses[] = "(p.part_num LIKE ? OR REPLACE(p.name, ' ', '') LIKE ?)";
+            $params[]  = $like;
+            $params[]  = $like;
+        }
+        return ['(' . implode(' AND ', $clauses) . ')', $params];
     }
 
     /** Ein Teil samt Kategorie. */
