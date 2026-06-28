@@ -12,7 +12,7 @@ use App\Service\ContainerRules;
 <article class="contentBox">
   <div class="contentBoxHeader">
     <span class="icon"></span>
-    <span class="codeTag"><?= e($container['code']) ?></span>&nbsp; <?= e(ContainerRules::label($container['kind'])) ?> · <?= e($container['name']) ?>
+    <?php if (!empty($container['code'])): ?><span class="codeTag"><?= e($container['code']) ?></span>&nbsp; <?php endif; ?><?= e(ContainerRules::label($container['kind'])) ?> · <?= e($container['name']) ?>
   </div>
   <div class="contentBoxBody">
     <table>
@@ -21,6 +21,7 @@ use App\Service\ContainerRules;
           <?php if (!empty($container['parent_code'])): ?><span class="codeTag"><?= e($container['parent_code']) ?></span> <?php endif; ?>
           <?= e($container['parent_name'] ?? '– kein Standort –') ?>
         </td></tr>
+      <?php if (!empty($container['code'])): ?>
       <tr><th>Automatische ID</th><td><span class="codeTag"><?= e($container['code']) ?></span></td></tr>
       <tr><th>Eigene ID</th>
         <td>
@@ -34,16 +35,21 @@ use App\Service\ContainerRules;
             <?= !empty($container['custom_code']) ? '<span class="codeTag">' . e($container['custom_code']) . '</span>' : '–' ?>
           <?php endif; ?>
         </td></tr>
-      <tr><th>Notiz</th><td><?= e($container['note'] ?? '–') ?></td></tr>
       <tr><th>RFID-EPC</th><td><?= e($container['rfid_epc'] ?? '–') ?></td></tr>
+      <?php endif; ?>
+      <tr><th>Notiz</th><td><?= e($container['note'] ?? '–') ?></td></tr>
     </table>
 
     <p style="margin-top:14px">
       <?php if ($currentUser !== null): ?>
         <a class="btn btn-sm btn-accent" href="<?= e(base_url('container/' . $container['id'] . '/add')) ?>">+ Bestand erfassen</a>
-        <a class="btn btn-sm" href="<?= e(base_url('move?code=' . urlencode($container['code']))) ?>">Umräumen</a>
+        <?php if (!empty($container['code'])): ?>
+          <a class="btn btn-sm" href="<?= e(base_url('move?code=' . urlencode($container['code']))) ?>">Umräumen</a>
+        <?php endif; ?>
       <?php endif; ?>
-      <a class="btn-ghost btn-sm" href="<?= e(base_url('container/' . $container['id'] . '/history')) ?>">Verlauf</a>
+      <?php if (!empty($container['code'])): ?>
+        <a class="btn-ghost btn-sm" href="<?= e(base_url('container/' . $container['id'] . '/history')) ?>">Verlauf</a>
+      <?php endif; ?>
       <?php if ($currentUser !== null): ?>
         <form method="post" action="<?= e(base_url('container/' . $container['id'] . '/delete')) ?>"
               style="display:inline" onsubmit="return confirm('Diesen Behälter löschen? Geht nur, wenn er leer ist.')">

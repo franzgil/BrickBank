@@ -6,7 +6,7 @@ use App\Core\Csrf;
 use App\Integration\WcfSession;
 use App\Model\Repository\CatalogRepository;
 use App\Model\Repository\ItemRepository;
-use App\Model\Repository\LabelRepository;
+use App\Model\Repository\LocationRepository;
 use App\Model\Repository\OwnerRepository;
 use App\Service\StockService;
 
@@ -16,8 +16,8 @@ use App\Service\StockService;
  */
 class InventoryController extends Controller
 {
-    /** @var LabelRepository */
-    private $labels;
+    /** @var LocationRepository */
+    private $locations;
     /** @var CatalogRepository */
     private $catalog;
     /** @var ItemRepository */
@@ -30,7 +30,7 @@ class InventoryController extends Controller
     public function __construct()
     {
         parent::__construct();
-        $this->labels  = new LabelRepository();
+        $this->locations = new LocationRepository();
         $this->catalog = new CatalogRepository();
         $this->items   = new ItemRepository();
         $this->owners  = new OwnerRepository();
@@ -40,7 +40,7 @@ class InventoryController extends Controller
     public function add($id): void
     {
         $user = $this->requireLogin();
-        $container = $this->labels->find((int) $id);
+        $container = $this->locations->findDetail((int) $id);
         if ($container === null) {
             http_response_code(404);
             echo 'Behälter nicht gefunden';
@@ -53,7 +53,7 @@ class InventoryController extends Controller
 
         $verein = $this->owners->verein();
         $data = [
-            'title'       => 'Bestand erfassen · ' . $container['code'],
+            'title'       => 'Bestand erfassen · ' . ($container['code'] ?? $container['name']),
             'nav'         => 'container',
             'container'   => $container,
             'q'           => $q,
@@ -90,7 +90,7 @@ class InventoryController extends Controller
         $user = $this->requireLogin();
         Csrf::validate($this->request->post('csrf_token'));
 
-        $container = $this->labels->find((int) $id);
+        $container = $this->locations->findDetail((int) $id);
         if ($container === null) {
             http_response_code(404);
             echo 'Behälter nicht gefunden';
@@ -150,7 +150,7 @@ class InventoryController extends Controller
             $this->redirect($back);
         }
 
-        $this->flash('success', $qty . '× ' . $partNum . ' (' . $cond . ') erfasst in ' . $container['code'] . '.');
+        $this->flash('success', $qty . '× ' . $partNum . ' (' . $cond . ') erfasst in ' . ($container['code'] ?? $container['name']) . '.');
         $this->redirect(base_url('container/' . $container['id']));
     }
 }

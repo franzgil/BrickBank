@@ -25,7 +25,7 @@ if (!function_exists('bb_render_branches')) {
               <td style="padding-left:<?= (12 + $pad) ?>px">
                 <?= $depth > 0 ? '└ ' : '' ?>
                 <?php if (!empty($b['code'])): ?><span class="codeTag"><?= e($b['code']) ?></span> <?php endif; ?>
-                <?php if ($isC): ?><a href="<?= e(base_url('container/' . $id)) ?>"><?= e($b['name']) ?></a><?php else: ?><?= e($b['name']) ?><?php endif; ?>
+                <a href="<?= e(base_url('container/' . $id)) ?>"><?= e($b['name']) ?></a>
               </td>
               <td><?= e(ucfirst($b['kind'])) ?></td>
               <td><?= $sum['cnt'] > 0 ? ((int) $sum['cnt'] . ' Pos. · ' . (int) $sum['qty'] . ' Stk') : '–' ?></td>

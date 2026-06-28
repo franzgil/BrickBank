@@ -98,7 +98,7 @@ class ContainerController extends Controller
     /** Detailansicht eines Behälters inkl. Inhalt. */
     public function show($id): void
     {
-        $container = $this->labels->find((int) $id);
+        $container = $this->locations->findDetail((int) $id);
         if ($container === null) {
             http_response_code(404);
             echo 'Behälter nicht gefunden';
@@ -106,7 +106,7 @@ class ContainerController extends Controller
         }
         $viewer = WcfSession::user();
         $this->render('container/detail', [
-            'title'     => $container['code'],
+            'title'     => $container['code'] ?? $container['name'],
             'nav'       => 'container',
             'container' => $container,
             'contents'  => $this->holdings->contentsOfLocation((int) $id, $viewer ? $viewer->userId : null),
@@ -119,7 +119,7 @@ class ContainerController extends Controller
     {
         $this->requireLogin();
         Csrf::validate($this->request->post('csrf_token'));
-        $container = $this->labels->find((int) $id);
+        $container = $this->locations->findDetail((int) $id);
         if ($container === null) {
             http_response_code(404);
             echo 'Behälter nicht gefunden';
@@ -138,7 +138,7 @@ class ContainerController extends Controller
     {
         $this->requireLogin();
         Csrf::validate($this->request->post('csrf_token'));
-        $container = $this->labels->find((int) $id);
+        $container = $this->locations->findDetail((int) $id);
         if ($container === null) {
             http_response_code(404);
             echo 'Behälter nicht gefunden';
@@ -160,7 +160,7 @@ class ContainerController extends Controller
     {
         $this->requireLogin();
         Csrf::validate($this->request->post('csrf_token'));
-        $container = $this->labels->find((int) $id);
+        $container = $this->locations->findDetail((int) $id);
         if ($container !== null && !empty($container['image_path'])) {
             \App\Service\ImageUpload::deletePublic($container['image_path']);
             $this->locations->setImagePath((int) $id, null);

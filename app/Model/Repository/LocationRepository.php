@@ -55,6 +55,24 @@ class LocationRepository
         return ['ok' => true, 'message' => 'Ast gelöscht.', 'image_path' => $imagePath ?: null];
     }
 
+    /** Detaildaten eines Astes (generisch: mit oder ohne Etikett/Code). */
+    public function findDetail(int $id): ?array
+    {
+        $stmt = Database::app()->prepare(
+            'SELECT l.id, l.parent_id, l.owner_id, l.name, l.kind, l.note, l.image_path,
+                    ll.code, ll.custom_code, ll.rfid_epc,
+                    p.name AS parent_name, p.kind AS parent_kind, pll.code AS parent_code
+             FROM bb_location l
+             LEFT JOIN bb_location_label ll ON ll.location_id = l.id
+             LEFT JOIN bb_location p       ON p.id = l.parent_id
+             LEFT JOIN bb_location_label pll ON pll.location_id = p.id
+             WHERE l.id = ? LIMIT 1'
+        );
+        $stmt->execute([$id]);
+        $row = $stmt->fetch();
+        return $row ?: null;
+    }
+
     /** Alle Äste eines Kontos (für den Lagerbaum), inkl. Behälter-Code. */
     public function treeForOwner(int $ownerId): array
     {

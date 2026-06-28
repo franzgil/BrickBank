@@ -7,14 +7,14 @@ use App\Service\ContainerRules;
 <div class="breadcrumbs">
   <a href="<?= e(base_url('/')) ?>">Start</a><span class="sep">›</span>
   <a href="<?= e(base_url('container')) ?>">Behälter</a><span class="sep">›</span>
-  <a href="<?= e(base_url('container/' . $container['id'])) ?>"><?= e($container['code']) ?></a><span class="sep">›</span>
+  <a href="<?= e(base_url('container/' . $container['id'])) ?>"><?= e($container['code'] ?? $container['name']) ?></a><span class="sep">›</span>
   <span>Bestand erfassen</span>
 </div>
 
 <article class="contentBox">
   <div class="contentBoxHeader">
     <span class="icon"></span>Bestand erfassen in
-    <span class="codeTag"><?= e($container['code']) ?></span>&nbsp;<?= e(ContainerRules::label($container['kind'])) ?>
+    <?php if (!empty($container['code'])): ?><span class="codeTag"><?= e($container['code']) ?></span>&nbsp;<?php endif; ?><?= e(ContainerRules::label($container['kind'])) ?> · <?= e($container['name']) ?>
   </div>
   <div class="contentBoxBody">
     <form method="get" action="<?= e(base_url('container/' . $container['id'] . '/add')) ?>">
