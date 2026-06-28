@@ -16,6 +16,9 @@ Festlegungen (abgestimmt):
 - **Mengen:** exakte Stückzahlen, mit **Bewegungsprotokoll** (jede Änderung
   nachvollziehbar — sonst stimmen exakte Zahlen auf Dauer nicht).
 - **Zustand:** `neu` / `gebraucht`.
+- **Sichtbarkeit:** jeder Bestandsposten ist `privat` / `intern` / `verein`
+  freigebbar; Vereinsbestand wird in einem **Lager** (Ort mit Lagerwart) geführt
+  (Details §3.6).
 - **Verleih:** nur an **WSC-Mitglieder** (über `wcf_user_id` aus dem SSO).
 - **Projekte:** **Bestand und Verfügbarkeit** verwalten — reservierte Teile
   mindern die *Verfügbarkeit*, der physische *Bestand* bleibt unverändert.
@@ -82,7 +85,8 @@ CREATE TABLE bb_holding (
   id INT AUTO_INCREMENT PRIMARY KEY,
   item_id INT NOT NULL,
   location_id INT NOT NULL,
-  owner_id INT NOT NULL,
+  owner_id INT NOT NULL,                  -- Eigentum (Verein oder Mitglied)
+  visibility ENUM('privat','intern','verein') NOT NULL DEFAULT 'privat',  -- Freigabe/Sichtbarkeit
   cond ENUM('neu','gebraucht') NOT NULL DEFAULT 'gebraucht',  -- "condition" ist MySQL-Schlüsselwort
   quantity INT NOT NULL DEFAULT 0,        -- Saldo, >= 0
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -177,6 +181,54 @@ CREATE TABLE bb_project_part (
 Optional komfortabel: die Stückliste eines Sets lässt sich aus
 `rb_inventory_parts` automatisch erzeugen („was fehlt mir für Set X?").
 
+### 3.6 Eigentum, Sichtbarkeit & Verwaltung (Mandanten-Logik)
+
+Drei **getrennte** Konzepte – „Bestand" = eine einzelne Position (`bb_holding`,
+z. B. eine Tüte oder ein Element):
+
+- **Eigentum** (`bb_holding.owner_id`): Verein **oder** ein Mitglied.
+- **Sichtbarkeit/Freigabe** (`bb_holding.visibility`): wer den Posten *sehen* darf.
+- **Verwaltung/Lager** (`bb_location.managed_by_wcf_user_id`): welches Mitglied
+  einen Ort/„Lager" betreut (für Vereinsbestand, der vor Ort verwaltet wird).
+
+**Sichtbarkeitsstufen je Bestandsposition:**
+
+| Stufe | Bedeutung | Wer sieht ihn |
+|-------|-----------|---------------|
+| `privat` | nur für den Besitzer | nur das eigene Mitglied |
+| `intern` | für alle Mitglieder sichtbar (Info/Koordination) | alle eingeloggten Mitglieder |
+| `verein` | dem Verein bereitgestellt (Nutzung für Events/Projekte), Eigentum bleibt beim Mitglied | alle Mitglieder + Verein |
+
+**Vereinsbestand** (`owner = Verein`) ist für Mitglieder sichtbar und wird über
+ein **Lager** geführt: ein `bb_location` mit `managed_by_wcf_user_id` (Lagerwart).
+
+```sql
+-- Erweiterung des bestehenden bb_location um die Lager-Verwaltung:
+ALTER TABLE bb_location
+  ADD COLUMN managed_by_wcf_user_id INT NULL;   -- Lagerwart (WSC-Mitglied), optional
+```
+
+**Die vier praktischen Fälle:**
+
+| Fall | owner | visibility | Lagerwart |
+|------|-------|------------|-----------|
+| Privater Bestand eines Mitglieds | Mitglied | `privat` | – |
+| Interner Bestand (für Mitglieder offen) | Mitglied | `intern` | – |
+| Für den Verein freigegeben | Mitglied | `verein` | – |
+| Vereinslager (Verein-Eigentum, Mitglied verwaltet) | Verein | `intern`/`verein` | Mitglied |
+
+**Zugriffsregeln (eingeloggtes Mitglied U):**
+- **Lesen:** eigener Bestand immer; fremder Mitglieds-Bestand nur bei
+  `intern`/`verein`; Vereinsbestand immer. `privat` fremder Mitglieder: nie.
+- **Schreiben:** Mitglieds-Bestand nur der Besitzer; Vereinsbestand der
+  zuständige **Lagerwart** (und berechtigte WSC-Gruppen, z. B. Vorstand, über
+  `wsc.allowed_group_ids`).
+- **Gäste (nicht eingeloggt):** kein Zugriff (App ist mitgliederintern).
+
+> **Freigeben ≠ Verschenken.** `visibility = 'verein'` *stellt bereit*, das
+> Eigentum bleibt beim Mitglied. Eine echte **Eigentumsübertragung** an den
+> Verein ist eine separate, ausdrückliche Aktion (ändert `owner_id`).
+
 ## 4. Die zentrale Logik in Formeln
 
 ```
@@ -197,6 +249,9 @@ Alle drei lassen sich auch je **Owner** oder je **Zustand** filtern (z. B.
 4. **Reservierung ≠ Entnahme.** Projektzuteilung und offene Mengen-Leihe mindern
    nur die **Verfügbarkeit**; der physische Bestand sinkt erst bei echter Entnahme.
 5. **Verleih nur an WSC-Mitglieder** (`borrower_wcf_user_id`).
+6. **Sichtbarkeit pro Position:** `privat` (nur Besitzer) / `intern` (alle
+   Mitglieder) / `verein` (bereitgestellt). Vereinsbestand wird vom **Lagerwart**
+   des jeweiligen Lagers verwaltet. Freigeben ändert kein Eigentum (§3.6).
 
 ## 6. Beispielabfragen
 ```sql
