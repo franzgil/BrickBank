@@ -46,7 +46,7 @@ use App\Service\ContainerRules;
           <?php foreach ($contents as $row): ?>
             <tr>
               <td><?= e($row['part_num'] ?? '–') ?></td>
-              <td><?= e($row['part_name'] ?? ('(' . $row['item_type'] . ')')) ?></td>
+              <td><a href="<?= e(base_url('item/' . $row['item_id'])) ?>"><?= e($row['part_name'] ?? ('(' . $row['item_type'] . ')')) ?></a></td>
               <td><?= e($row['color_name'] ?? '–') ?></td>
               <td><?= e($row['cond']) ?></td>
               <td><?= e($row['quantity']) ?></td>

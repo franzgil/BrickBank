@@ -14,7 +14,7 @@ class OwnerRepository
 
     public function find(int $id): ?array
     {
-        $stmt = Database::app()->prepare('SELECT id, type, name FROM bb_owner WHERE id = ? LIMIT 1');
+        $stmt = Database::app()->prepare('SELECT id, type, name, wcf_user_id FROM bb_owner WHERE id = ? LIMIT 1');
         $stmt->execute([$id]);
         $row = $stmt->fetch();
         return $row ?: null;

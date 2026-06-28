@@ -11,6 +11,7 @@ use App\Controller\MoveController;
 use App\Controller\LabelController;
 use App\Controller\StocktakeController;
 use App\Controller\InventoryController;
+use App\Controller\StockController;
 
 $router->get('/', [HomeController::class, 'index']);
 $router->get('/ping', [HomeController::class, 'ping']);   // Diagnose ohne DB
@@ -34,6 +35,12 @@ $router->get('/label/print', [LabelController::class, 'printSheet']);
 $router->get('/label/export', [LabelController::class, 'export']);
 $router->get('/label/qr', [LabelController::class, 'qr']);
 $router->get('/label/{id}', [LabelController::class, 'preview']);
+
+// --- Bestand (Items, Übersicht, Entnehmen/Umbuchen) ---
+$router->get('/stock', [StockController::class, 'index']);
+$router->get('/item/{id}', [StockController::class, 'item']);
+$router->post('/item/{id}/remove', [StockController::class, 'remove']);
+$router->post('/item/{id}/move', [StockController::class, 'move']);
 
 // --- Inventur ---
 $router->get('/stocktake', [StocktakeController::class, 'index']);

@@ -76,22 +76,47 @@ class HoldingRepository
         return $stmt->fetchAll();
     }
 
-    /** Wo liegt ein Item (sichtbar für $viewer)? */
+    /** Wo liegt ein Item (sichtbar für $viewer)? Inkl. Schlüssel für Buchungen. */
     public function locationsForItem(int $itemId, ?int $viewer): array
     {
         $stmt = Database::app()->prepare(
-            'SELECT h.quantity, h.cond, h.visibility,
-                    l.id AS location_id, l.name AS location_name,
-                    ll.code AS location_code,
-                    o.name AS owner_name, o.type AS owner_type
+            'SELECT h.id AS holding_id, h.quantity, h.cond, h.visibility,
+                    h.owner_id, o.name AS owner_name, o.type AS owner_type, o.wcf_user_id,
+                    l.id AS location_id, l.name AS location_name, ll.code AS location_code
              FROM bb_holding h
              JOIN bb_owner o ON o.id = h.owner_id
              JOIN bb_location l ON l.id = h.location_id
              LEFT JOIN bb_location_label ll ON ll.location_id = l.id
              WHERE h.item_id = ? AND ' . $this->visClause() . '
-             ORDER BY ll.code, l.name'
+             ORDER BY ll.code, l.name, h.cond'
         );
         $stmt->execute([$itemId, $viewer]);
+        return $stmt->fetchAll();
+    }
+
+    /** Items mit (sichtbarem) Bestand suchen – globale Bestandssuche. */
+    public function searchItemsWithStock(string $q, ?int $viewer, int $limit = 200): array
+    {
+        $limit = max(1, min(500, $limit));
+        $esc         = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $q);
+        $like        = '%' . $esc . '%';
+        $likeNoSpace = '%' . str_replace(' ', '', $esc) . '%';
+        $stmt = Database::app()->prepare(
+            "SELECT i.id AS item_id, i.type AS item_type, i.part_num,
+                    rp.name AS part_name, rc.name AS color_name,
+                    COALESCE(SUM(h.quantity),0) AS on_hand
+             FROM bb_holding h
+             JOIN bb_item  i ON i.id = h.item_id
+             JOIN bb_owner o ON o.id = h.owner_id
+             LEFT JOIN rb_parts  rp ON i.type = 'element' AND rp.part_num = i.part_num
+             LEFT JOIN rb_colors rc ON i.type = 'element' AND rc.id = i.color_id
+             WHERE " . $this->visClause() . "
+                   AND (i.part_num LIKE ? OR REPLACE(rp.name,' ','') LIKE ?)
+             GROUP BY i.id
+             ORDER BY rp.name, rc.name
+             LIMIT " . $limit
+        );
+        $stmt->execute([$viewer, $like, $likeNoSpace]);
         return $stmt->fetchAll();
     }
 
