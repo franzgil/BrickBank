@@ -25,9 +25,13 @@ return [
     // WoltLab Suite 5.5 – AUSSCHLIESSLICH LESEND.
     // Tabellen-/Cookie-Namen an der laufenden 5.5-Instanz verifizieren (siehe INTEGRATION.md).
     'wsc' => [
+        // Liegen die WoltLab-Tabellen (wcf1_*) in DERSELBEN Datenbank wie
+        // BrickBank? Dann true setzen – dann wird die App-Verbindung genutzt
+        // und der separate 'db'-Block unten ignoriert.
+        'same_database' => false,
         'db' => [
             'host'     => '127.0.0.1',
-            'name'     => 'wcf',
+            'name'     => 'wcf',            // leer lassen, wenn same_database = true
             'user'     => 'brickbank_ro',   // DB-Benutzer mit NUR-LESE-Rechten
             'password' => '',
             'charset'  => 'utf8mb4',

@@ -44,7 +44,7 @@ class WcfSession
         }
 
         try {
-            $db = Database::wsc();
+            $db = Database::wcf();
 
             // 1. Session → userID
             $stmt = $db->prepare(

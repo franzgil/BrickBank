@@ -31,6 +31,22 @@ class Database
         return self::$wsc;
     }
 
+    /**
+     * Verbindung für die WoltLab-Tabellen (wcf1_*).
+     * Liegen sie in derselben Datenbank wie BrickBank
+     * (wsc.same_database = true oder kein eigener wsc.db.name gesetzt),
+     * wird die App-Verbindung genutzt – sonst die separate WSC-Verbindung.
+     */
+    public static function wcf(): PDO
+    {
+        $sameDb  = (bool) Config::get('wsc.same_database', false);
+        $wscName = (string) Config::get('wsc.db.name', '');
+        if ($sameDb || $wscName === '') {
+            return self::app();
+        }
+        return self::wsc();
+    }
+
     private static function connect(array $cfg): PDO
     {
         $dsn = sprintf(

@@ -14,6 +14,7 @@ use App\Controller\InventoryController;
 
 $router->get('/', [HomeController::class, 'index']);
 $router->get('/ping', [HomeController::class, 'ping']);   // Diagnose ohne DB
+$router->get('/auth-debug', [HomeController::class, 'authDebug']);   // SSO-Diagnose (danach entfernen)
 
 // --- Behälter (Container/Karton/Tüte) ---
 $router->get('/container', [ContainerController::class, 'index']);
