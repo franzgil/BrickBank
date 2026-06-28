@@ -80,20 +80,56 @@ class HomeController extends Controller
                 }
             }
 
-            echo "\n== Lookup mit aktuellem Cookie ==\n";
-            if (isset($_COOKIE[$expect]) && $_COOKIE[$expect] !== '') {
-                try {
-                    $stmt = \App\Core\Database::wcf()->prepare(
-                        'SELECT userID FROM ' . $prefix . 'user_session WHERE sessionID = ? LIMIT 1'
-                    );
-                    $stmt->execute([$_COOKIE[$expect]]);
-                    $uid = $stmt->fetchColumn();
-                    echo '  ' . ($uid !== false ? ('Treffer, userID=' . $uid) : 'KEIN Treffer (Cookie-Wert ≠ sessionID)') . "\n";
-                } catch (\Throwable $e) {
-                    echo '  Fehler: ' . $e->getMessage() . "\n";
-                }
-            } else {
+            echo "\n== Cookie-Struktur & Lookup-Tests ==\n";
+            $cv = isset($_COOKIE[$expect]) ? (string) $_COOKIE[$expect] : '';
+            if ($cv === '') {
                 echo "  (kein Session-Cookie vorhanden)\n";
+            } else {
+                // Struktur beschreiben, OHNE den Wert zu zeigen.
+                $segs = explode('-', $cv);
+                $desc = array_map(function ($s) {
+                    return strlen($s) . (($s !== '' && ctype_xdigit($s)) ? 'hex' : '');
+                }, $segs);
+                echo '  Länge: ' . strlen($cv) . ", Segmente('-'): " . count($segs)
+                    . ' [' . implode(', ', $desc) . "]\n";
+
+                // Kandidaten-Transformationen.
+                $cands = [
+                    'raw'    => $cv,
+                    'sha256' => hash('sha256', $cv),
+                    'sha1'   => sha1($cv),
+                    'md5'    => md5($cv),
+                ];
+                if (count($segs) >= 2) {
+                    $first = $segs[0];
+                    $last  = $segs[count($segs) - 1];
+                    $cands['seg0']            = $first;
+                    $cands['segLast']         = $last;
+                    $cands['sha256(seg0)']    = hash('sha256', $first);
+                    $cands['sha256(segLast)'] = hash('sha256', $last);
+                }
+
+                $hit = false;
+                foreach (['user_session', 'session'] as $t) {
+                    foreach ($cands as $name => $key) {
+                        try {
+                            $st = \App\Core\Database::wcf()->prepare(
+                                'SELECT userID FROM ' . $prefix . $t . ' WHERE sessionID = ? LIMIT 1'
+                            );
+                            $st->execute([$key]);
+                            $uid = $st->fetchColumn();
+                            if ($uid !== false) {
+                                echo '  TREFFER: ' . $prefix . $t . ' via ' . $name . ' → userID=' . $uid . "\n";
+                                $hit = true;
+                            }
+                        } catch (\Throwable $e) {
+                            // Tabelle/Spalte evtl. nicht vorhanden – ignorieren.
+                        }
+                    }
+                }
+                if (!$hit) {
+                    echo "  KEIN Treffer mit irgendeiner Variante.\n";
+                }
             }
 
             echo "\n== Ergebnis ==\n";
