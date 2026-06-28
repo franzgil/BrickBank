@@ -114,6 +114,42 @@ class ContainerController extends Controller
         ]);
     }
 
+    /** Bild eines Behälters/Astes hochladen. */
+    public function uploadImage($id): void
+    {
+        $this->requireLogin();
+        Csrf::validate($this->request->post('csrf_token'));
+        $container = $this->labels->find((int) $id);
+        if ($container === null) {
+            http_response_code(404);
+            echo 'Behälter nicht gefunden';
+            return;
+        }
+        try {
+            $rel = \App\Service\ImageUpload::storeLocationImage($_FILES['image'] ?? [], (int) $id);
+            \App\Service\ImageUpload::deletePublic($container['image_path'] ?? null);
+            $this->locations->setImagePath((int) $id, $rel);
+            $this->flash('success', 'Bild hochgeladen.');
+        } catch (\Throwable $e) {
+            $this->flash('error', $e->getMessage());
+        }
+        $this->redirect(base_url('container/' . (int) $id));
+    }
+
+    /** Bild eines Behälters/Astes entfernen. */
+    public function removeImage($id): void
+    {
+        $this->requireLogin();
+        Csrf::validate($this->request->post('csrf_token'));
+        $container = $this->labels->find((int) $id);
+        if ($container !== null && !empty($container['image_path'])) {
+            \App\Service\ImageUpload::deletePublic($container['image_path']);
+            $this->locations->setImagePath((int) $id, null);
+        }
+        $this->flash('info', 'Bild entfernt.');
+        $this->redirect(base_url('container/' . (int) $id));
+    }
+
     /** Eigene (parallele) ID eines Behälters setzen/ändern. */
     public function setCustomCode($id): void
     {

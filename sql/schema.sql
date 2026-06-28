@@ -31,6 +31,7 @@ CREATE TABLE bb_location (
             'container','karton','tuete','sortimentsbox','einsatzkasten') NOT NULL DEFAULT 'sonstiges',
   note VARCHAR(255) NULL,
   managed_by_wcf_user_id INT NULL,   -- Lagerwart (WSC-Mitglied), optional
+  image_path VARCHAR(255) NULL,      -- selbst hochgeladenes Bild (relativ unter public/)
   KEY idx_location_parent (parent_id),
   KEY idx_location_owner (owner_id),
   FOREIGN KEY (parent_id) REFERENCES bb_location(id) ON DELETE SET NULL,

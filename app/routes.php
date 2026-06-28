@@ -31,6 +31,8 @@ $router->post('/container', [ContainerController::class, 'store']);
 $router->get('/container/{id}', [ContainerController::class, 'show']);
 $router->get('/container/{id}/history', [MoveController::class, 'history']);
 $router->post('/container/{id}/custom-code', [ContainerController::class, 'setCustomCode']);
+$router->post('/container/{id}/image', [ContainerController::class, 'uploadImage']);
+$router->post('/container/{id}/image/remove', [ContainerController::class, 'removeImage']);
 $router->get('/container/{id}/add', [InventoryController::class, 'add']);
 $router->post('/container/{id}/inventory', [InventoryController::class, 'store']);
 

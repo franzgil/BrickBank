@@ -86,7 +86,7 @@ class LabelRepository
     public function find(int $id): ?array
     {
         $stmt = Database::app()->prepare(
-            'SELECT l.id, l.name, l.kind, l.parent_id, l.note,
+            'SELECT l.id, l.name, l.kind, l.parent_id, l.note, l.image_path,
                     ll.code, ll.custom_code, ll.code_seq, ll.owner_id, ll.rfid_epc,
                     p.name AS parent_name, p.kind AS parent_kind, pll.code AS parent_code
              FROM bb_location l

@@ -4,6 +4,9 @@
 # QR-/Etiketten-Cache
 /public/assets/cache/
 
+# Hochgeladene Bilder (Äste/Standorte)
+/public/assets/uploads/
+
 # Übliche Artefakte
 *.log
 .DS_Store

@@ -49,6 +49,33 @@ use App\Service\ContainerRules;
 </article>
 
 <article class="contentBox">
+  <div class="contentBoxHeader"><span class="icon"></span>Bild</div>
+  <div class="contentBoxBody">
+    <?php if (!empty($container['image_path'])): ?>
+      <p><img src="<?= e(asset_url($container['image_path'])) ?>" alt="Bild"
+              style="max-width:100%;max-height:340px;border-radius:6px;border:1px solid var(--wcfContentBorder)"></p>
+    <?php else: ?>
+      <p class="hint">Noch kein Bild.</p>
+    <?php endif; ?>
+    <?php if ($currentUser !== null): ?>
+      <form method="post" action="<?= e(base_url('container/' . $container['id'] . '/image')) ?>"
+            enctype="multipart/form-data" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <input type="hidden" name="csrf_token" value="<?= e($csrf) ?>">
+        <input type="file" name="image" accept="image/*" required>
+        <button type="submit" class="btn btn-sm">Hochladen</button>
+      </form>
+      <?php if (!empty($container['image_path'])): ?>
+        <form method="post" action="<?= e(base_url('container/' . $container['id'] . '/image/remove')) ?>" style="margin-top:8px">
+          <input type="hidden" name="csrf_token" value="<?= e($csrf) ?>">
+          <button type="submit" class="btn-ghost btn-sm">Bild entfernen</button>
+        </form>
+      <?php endif; ?>
+      <div class="hint">JPG, PNG, WebP oder GIF, max. 5 MB.</div>
+    <?php endif; ?>
+  </div>
+</article>
+
+<article class="contentBox">
   <div class="contentBoxHeader"><span class="icon"></span>Inhalt (Bestand)</div>
   <div class="contentBoxBody">
     <?php if (empty($contents)): ?>

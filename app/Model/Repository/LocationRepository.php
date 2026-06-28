@@ -11,11 +11,18 @@ class LocationRepository
     public function find(int $id): ?array
     {
         $stmt = Database::app()->prepare(
-            'SELECT id, parent_id, owner_id, name, kind, note FROM bb_location WHERE id = ? LIMIT 1'
+            'SELECT id, parent_id, owner_id, name, kind, note, image_path FROM bb_location WHERE id = ? LIMIT 1'
         );
         $stmt->execute([$id]);
         $row = $stmt->fetch();
         return $row ?: null;
+    }
+
+    /** Setzt/löscht den Bildpfad eines Astes. */
+    public function setImagePath(int $id, ?string $path): void
+    {
+        Database::app()->prepare('UPDATE bb_location SET image_path = ? WHERE id = ?')
+            ->execute([$path, $id]);
     }
 
     /** Alle Äste eines Kontos (für den Lagerbaum), inkl. Behälter-Code. */
