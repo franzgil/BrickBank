@@ -83,8 +83,8 @@ class StockController extends Controller
         ]);
     }
 
-    /** Entnahme aus einer Position. */
-    public function remove($id): void
+    /** Mengenkorrektur einer Position: hinzufügen (+) oder entnehmen (−). */
+    public function adjust($id): void
     {
         $user = $this->requireLogin();
         Csrf::validate($this->request->post('csrf_token'));
@@ -94,14 +94,23 @@ class StockController extends Controller
         $ownerId    = (int) $this->request->post('owner_id', 0);
         $cond       = (string) $this->request->post('cond', 'gebraucht');
         $qty        = (int) $this->request->post('quantity', 0);
+        $action     = (string) $this->request->post('action', '');   // add|remove
 
         if (!$this->mayEdit($ownerId, $user)) {
             $this->flash('error', 'Keine Berechtigung für diese Position.');
             $this->redirect(base_url('item/' . $itemId));
         }
         try {
-            $this->stock->remove($itemId, $locationId, $ownerId, $cond, $qty, $user->userId, null);
-            $this->flash('success', $qty . '× entnommen.');
+            if ($action === 'add') {
+                // Sichtbarkeit der bestehenden Position übernehmen.
+                $existing   = $this->holdings->findExact($itemId, $locationId, $ownerId, $cond);
+                $visibility = $existing ? $existing['visibility'] : 'privat';
+                $this->stock->add($itemId, $locationId, $ownerId, $cond, $visibility, $qty, $user->userId, null);
+                $this->flash('success', $qty . '× hinzugefügt.');
+            } else {
+                $this->stock->remove($itemId, $locationId, $ownerId, $cond, $qty, $user->userId, null);
+                $this->flash('success', $qty . '× entnommen.');
+            }
         } catch (\Throwable $e) {
             $this->flash('error', $e->getMessage());
         }

@@ -39,7 +39,7 @@ $router->get('/label/{id}', [LabelController::class, 'preview']);
 // --- Bestand (Items, Übersicht, Entnehmen/Umbuchen) ---
 $router->get('/stock', [StockController::class, 'index']);
 $router->get('/item/{id}', [StockController::class, 'item']);
-$router->post('/item/{id}/remove', [StockController::class, 'remove']);
+$router->post('/item/{id}/adjust', [StockController::class, 'adjust']);
 $router->post('/item/{id}/move', [StockController::class, 'move']);
 
 // --- Inventur ---

@@ -32,7 +32,7 @@ $loggedIn = $currentUser !== null;
       <p>Kein sichtbarer Bestand.</p>
     <?php else: ?>
       <table>
-        <thead><tr><th>Ort</th><th>Besitzer</th><th>Zustand</th><th>Sichtbar</th><th>Menge</th><?php if ($loggedIn): ?><th>Entnehmen</th><th>Umbuchen</th><?php endif; ?></tr></thead>
+        <thead><tr><th>Ort</th><th>Besitzer</th><th>Zustand</th><th>Sichtbar</th><th>Menge</th><?php if ($loggedIn): ?><th>Menge ±</th><th>Umbuchen</th><?php endif; ?></tr></thead>
         <tbody>
           <?php foreach ($places as $p): ?>
             <tr>
@@ -43,13 +43,14 @@ $loggedIn = $currentUser !== null;
               <td><?= e($p['quantity']) ?></td>
               <?php if ($loggedIn): ?>
               <td class="actions">
-                <form method="post" action="<?= e(base_url('item/' . $item['id'] . '/remove')) ?>" style="display:flex;gap:4px">
+                <form method="post" action="<?= e(base_url('item/' . $item['id'] . '/adjust')) ?>" style="display:flex;gap:4px">
                   <input type="hidden" name="csrf_token" value="<?= e($csrf) ?>">
                   <input type="hidden" name="location_id" value="<?= e($p['location_id']) ?>">
                   <input type="hidden" name="owner_id" value="<?= e($p['owner_id']) ?>">
                   <input type="hidden" name="cond" value="<?= e($p['cond']) ?>">
-                  <input type="number" name="quantity" min="1" max="<?= e($p['quantity']) ?>" value="1" style="width:70px;max-width:70px">
-                  <button type="submit" class="btn-ghost btn-sm">−</button>
+                  <input type="number" name="quantity" min="1" value="1" style="width:70px;max-width:70px">
+                  <button type="submit" name="action" value="add" class="btn-ghost btn-sm" title="hinzufügen">+</button>
+                  <button type="submit" name="action" value="remove" class="btn-ghost btn-sm" title="entnehmen">−</button>
                 </form>
               </td>
               <td class="actions">
