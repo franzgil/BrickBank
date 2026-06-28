@@ -2,19 +2,15 @@
 namespace App\Integration;
 
 use App\Core\Config;
-use App\Core\Database;
-use PDO;
 
 /**
- * WoltLab-Suite-5.5-SSO (read-only).
+ * WoltLab-Suite-SSO durch Bootstrappen von WoltLab (wcf/global.php).
  *
- * Liest das WSC-Session-Cookie, löst es gegen die WSC-Datenbank auf und liefert
- * den eingeloggten Benutzer. BrickBank speichert keine Passwörter und schreibt
- * NIE in WSC-Tabellen.
- *
- * Hinweis: Tabellen-/Spalten-/Cookie-Namen sind WSC-typisch, aber instanz-/
- * versionsabhängig. Vor dem Produktiveinsatz an der laufenden 5.5-Instanz
- * verifizieren (Konfiguration unter 'wsc' anpassen). Siehe docs/INTEGRATION.md.
+ * Statt das Session-Cookie selbst zu zerlegen, wird WoltLab geladen –
+ * WoltLab löst Cookie/Session/Signatur korrekt auf, und wir lesen nur den
+ * eingeloggten Benutzer über WCF::getUser(). Gleicher Ansatz wie im Projekt
+ * MemberMgt. WoltLab nutzt dabei seine eigene Datenbankverbindung
+ * (wcf/config.inc.php) – ein separater DB-Zugang für BrickBank ist nicht nötig.
  */
 class WcfSession
 {
@@ -33,56 +29,50 @@ class WcfSession
         return self::$user;
     }
 
+    /** Effektiver Pfad zu WoltLabs wcf/global.php (konfigurierbar, sonst geraten). */
+    public static function globalPhpPath(): string
+    {
+        $path = (string) Config::get('wsc.wcf_global', '');
+        if ($path !== '') {
+            return $path;
+        }
+        // Standard-Annahme: Apps liegen unter {webroot}/apps/<App>/,
+        // WoltLab unter {webroot}/wcf/ – also zwei Ebenen über dem App-Verzeichnis.
+        return dirname(dirname(BASE_PATH)) . '/wcf/global.php';
+    }
+
     private static function resolve(): ?WcfUser
     {
-        $prefix     = Config::get('wsc.table_prefix', 'wcf1_');
-        $cookieName = Config::get('wsc.cookie_prefix', 'wsc_') . 'user_session';
-
-        $sessionId = $_COOKIE[$cookieName] ?? null;
-        if (!is_string($sessionId) || $sessionId === '') {
+        $global = self::globalPhpPath();
+        if (!is_file($global)) {
+            error_log('[BrickBank] WCF global.php nicht gefunden: ' . $global);
             return null;
         }
-
         try {
-            $db = Database::wcf();
-
-            // 1. Session → userID
-            $stmt = $db->prepare(
-                'SELECT userID FROM ' . $prefix . 'user_session WHERE sessionID = ? LIMIT 1'
-            );
-            $stmt->execute([$sessionId]);
-            $userId = $stmt->fetchColumn();
-            if (!$userId) {
-                return null; // Gast-Session
+            if (!class_exists('\\wcf\\system\\WCF', false)) {
+                require_once $global;
             }
-
-            // 2. Benutzer-Stammdaten
-            $stmt = $db->prepare(
-                'SELECT userID, username, email FROM ' . $prefix . 'user WHERE userID = ? LIMIT 1'
-            );
-            $stmt->execute([$userId]);
-            $row = $stmt->fetch();
-            if (!$row) {
+            if (!class_exists('\\wcf\\system\\WCF', false)) {
                 return null;
             }
 
-            // 3. Gruppenzugehörigkeit (für Autorisierung)
-            $stmt = $db->prepare(
-                'SELECT groupID FROM ' . $prefix . 'user_to_group WHERE userID = ?'
-            );
-            $stmt->execute([$userId]);
-            $groups = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
+            $u = \wcf\system\WCF::getUser();
+            if (!$u || !$u->userID) {
+                return null; // Gast
+            }
+
+            $groups = method_exists($u, 'getGroupIDs')
+                ? array_map('intval', $u->getGroupIDs())
+                : [];
 
             return new WcfUser(
-                (int) $row['userID'],
-                (string) $row['username'],
-                (string) $row['email'],
+                (int) $u->userID,
+                (string) $u->username,
+                (string) $u->email,
                 $groups
             );
-        } catch (\PDOException $e) {
-            // WSC-Anbindung fehlerhaft konfiguriert → wie „nicht eingeloggt" behandeln,
-            // aber zur Diagnose protokollieren.
-            error_log('[BrickBank] WSC-SSO-Fehler: ' . $e->getMessage());
+        } catch (\Throwable $e) {
+            error_log('[BrickBank] WCF-Bootstrap-Fehler: ' . $e->getMessage());
             return null;
         }
     }
@@ -90,7 +80,7 @@ class WcfSession
     /** WSC-Login-URL inkl. Rücksprung auf die aktuelle Seite. */
     public static function loginUrl(): string
     {
-        $login = Config::get('wsc.login_url', '/');
+        $login = (string) Config::get('wsc.login_url', '/');
         $sep   = strpos($login, '?') === false ? '?' : '&';
         return $login . $sep . 'url=' . urlencode(self::currentUrl());
     }

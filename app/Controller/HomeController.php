@@ -36,135 +36,28 @@ class HomeController extends Controller
         header('Content-Type: text/plain; charset=utf-8');
 
         try {
-            $prefix = (string) \App\Core\Config::get('wsc.table_prefix', 'wcf1_');
-            $cpref  = (string) \App\Core\Config::get('wsc.cookie_prefix', '');
-            $expect = $cpref . 'user_session';
+            $wcfPath = \App\Integration\WcfSession::globalPhpPath();
 
-            echo "== Konfiguration ==\n";
+            echo "== WoltLab-Bootstrap (SSO) ==\n";
             echo '  config/config.php vorhanden: ' . (is_file(BASE_PATH . '/config/config.php') ? 'ja' : 'NEIN (Beispiel-Defaults aktiv)') . "\n";
-            echo '  wsc.same_database: ' . (\App\Core\Config::get('wsc.same_database', false) ? 'true' : 'false') . "\n";
-            echo '  wsc.db.name: ' . (string) \App\Core\Config::get('wsc.db.name', '') . "\n";
-            echo '  table_prefix: ' . $prefix . '   cookie_prefix: ' . $cpref . "\n";
+            echo '  BASE_PATH: ' . BASE_PATH . "\n";
+            echo '  wsc.wcf_global (konfiguriert): ' . (string) \App\Core\Config::get('wsc.wcf_global', '(leer → automatisch)') . "\n";
+            echo '  global.php (effektiver Pfad): ' . $wcfPath . "\n";
+            echo '  global.php vorhanden: ' . (@is_file($wcfPath) ? 'JA' : 'NEIN') . "\n";
+
+            $u = \App\Integration\WcfSession::user();
+            echo '  WCF-Klasse geladen: ' . (class_exists('\\wcf\\system\\WCF', false) ? 'ja' : 'nein') . "\n";
+            if ($u) {
+                echo '  ✅ EINGELOGGT: userID=' . $u->userId . ', user=' . $u->username
+                    . ', Gruppen=' . implode(',', $u->groupIds) . "\n";
+            } else {
+                echo "  Ergebnis: nicht eingeloggt / null\n";
+            }
 
             echo "\n== Empfangene Cookies (nur Namen) ==\n";
             foreach ($_COOKIE as $name => $val) {
-                echo '  ' . $name . '  (len ' . strlen((string) $val) . ")\n";
+                echo '  ' . $name . "\n";
             }
-            echo 'Erwarteter Session-Cookie: ' . $expect
-                . '  → ' . (isset($_COOKIE[$expect]) ? 'VORHANDEN' : 'FEHLT') . "\n";
-
-            echo "\n== Erreichbarkeit wcf1_user ==\n";
-            echo '  app-Verbindung:  ';
-            try {
-                $c = \App\Core\Database::app()->query('SELECT COUNT(*) FROM ' . $prefix . 'user')->fetchColumn();
-                echo 'OK (' . $c . " Nutzer)\n";
-            } catch (\Throwable $e) {
-                echo 'FEHLER: ' . $e->getMessage() . "\n";
-            }
-            echo '  wsc-Verbindung:  ';
-            try {
-                $c = \App\Core\Database::wsc()->query('SELECT COUNT(*) FROM ' . $prefix . 'user')->fetchColumn();
-                echo 'OK (' . $c . " Nutzer)\n";
-            } catch (\Throwable $e) {
-                echo 'FEHLER: ' . $e->getMessage() . "\n";
-            }
-
-            echo "\n== Session-Tabellen (aktive wcf()-Verbindung) ==\n";
-            foreach (['user_session', 'session'] as $t) {
-                echo '  ' . $prefix . $t . ': ';
-                try {
-                    $c = \App\Core\Database::wcf()->query('SELECT COUNT(*) FROM ' . $prefix . $t)->fetchColumn();
-                    echo $c . " Zeilen\n";
-                } catch (\Throwable $e) {
-                    echo "nicht vorhanden/Fehler\n";
-                }
-            }
-
-            echo "\n== Cookie-Struktur & Lookup-Tests ==\n";
-            $cv = isset($_COOKIE[$expect]) ? (string) $_COOKIE[$expect] : '';
-            if ($cv === '') {
-                echo "  (kein Session-Cookie vorhanden)\n";
-            } else {
-                // Struktur beschreiben, OHNE den Wert zu zeigen.
-                $segs = explode('-', $cv);
-                $desc = array_map(function ($s) {
-                    return strlen($s) . (($s !== '' && ctype_xdigit($s)) ? 'hex' : '');
-                }, $segs);
-                echo '  Länge: ' . strlen($cv) . ", Segmente('-'): " . count($segs)
-                    . ' [' . implode(', ', $desc) . "]\n";
-
-                // Kandidaten-Transformationen.
-                $cands = [
-                    'raw'    => $cv,
-                    'sha256' => hash('sha256', $cv),
-                    'sha1'   => sha1($cv),
-                    'md5'    => md5($cv),
-                ];
-                if (count($segs) >= 2) {
-                    $first = $segs[0];
-                    $last  = $segs[count($segs) - 1];
-                    $cands['seg0']            = $first;
-                    $cands['segLast']         = $last;
-                    $cands['sha256(seg0)']    = hash('sha256', $first);
-                    $cands['sha256(segLast)'] = hash('sha256', $last);
-                }
-
-                $hit = false;
-                foreach (['user_session', 'session'] as $t) {
-                    foreach ($cands as $name => $key) {
-                        try {
-                            $st = \App\Core\Database::wcf()->prepare(
-                                'SELECT userID FROM ' . $prefix . $t . ' WHERE sessionID = ? LIMIT 1'
-                            );
-                            $st->execute([$key]);
-                            $uid = $st->fetchColumn();
-                            if ($uid !== false) {
-                                echo '  TREFFER: ' . $prefix . $t . ' via ' . $name . ' → userID=' . $uid . "\n";
-                                $hit = true;
-                            }
-                        } catch (\Throwable $e) {
-                            // Tabelle/Spalte evtl. nicht vorhanden – ignorieren.
-                        }
-                    }
-                }
-                if (!$hit) {
-                    echo "  KEIN Treffer mit irgendeiner Variante.\n";
-                }
-            }
-
-            echo "\n== Spalten & Beispiel-Formate ==\n";
-            foreach (['user_session', 'session'] as $t) {
-                echo '  ' . $prefix . $t . ' Spalten: ';
-                try {
-                    $cols = \App\Core\Database::wcf()->query('SHOW COLUMNS FROM ' . $prefix . $t)
-                        ->fetchAll(\PDO::FETCH_COLUMN);
-                    echo implode(', ', $cols) . "\n";
-                } catch (\Throwable $e) {
-                    echo "Fehler\n";
-                    continue;
-                }
-                try {
-                    $sid = \App\Core\Database::wcf()->query(
-                        'SELECT sessionID FROM ' . $prefix . $t
-                        . " WHERE sessionID IS NOT NULL AND sessionID <> '' LIMIT 1"
-                    )->fetchColumn();
-                    if ($sid !== false) {
-                        $s = (string) $sid;
-                        $cls = ctype_xdigit($s) ? 'hex'
-                            : (preg_match('~^[A-Za-z0-9+/=._-]+$~', $s) ? 'base64ish' : 'sonstiges');
-                        echo '    Beispiel-sessionID: len=' . strlen($s) . ', ' . $cls
-                            . (strpos($s, '-') !== false ? ', enthält "-"' : '') . "\n";
-                    } else {
-                        echo "    (keine sessionID-Beispiele)\n";
-                    }
-                } catch (\Throwable $e) {
-                    echo '    sessionID? ' . $e->getMessage() . "\n";
-                }
-            }
-
-            echo "\n== Ergebnis ==\n";
-            $u = \App\Integration\WcfSession::user();
-            echo '  WcfSession::user() → ' . ($u ? ('userID=' . $u->userId . ' (' . $u->username . ')') : 'null') . "\n";
         } catch (\Throwable $e) {
             echo "\nFATAL: " . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine() . "\n";
         }

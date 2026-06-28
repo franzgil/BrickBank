@@ -25,9 +25,17 @@ return [
     // WoltLab Suite 5.5 – AUSSCHLIESSLICH LESEND.
     // Tabellen-/Cookie-Namen an der laufenden 5.5-Instanz verifizieren (siehe INTEGRATION.md).
     'wsc' => [
+        // --- SSO über WoltLab-Bootstrap (empfohlen, wie MemberMgt) ---
+        // Absoluter Pfad zu WoltLabs wcf/global.php. WoltLab löst Login/Session
+        // selbst auf; ein separater DB-Zugang unten ist dann NICHT nötig.
+        // Leer = automatische Annahme {webroot}/wcf/global.php
+        // (zwei Ebenen über dem BrickBank-App-Verzeichnis).
+        // Beispiel: '/var/www/html/wcf/global.php'
+        'wcf_global' => '',
+
+        // --- Folgende Werte nur für die Diagnose / den DB-Fallback ---
         // Liegen die WoltLab-Tabellen (wcf1_*) in DERSELBEN Datenbank wie
-        // BrickBank? Dann true setzen – dann wird die App-Verbindung genutzt
-        // und der separate 'db'-Block unten ignoriert.
+        // BrickBank? Dann true setzen.
         'same_database' => false,
         'db' => [
             'host'     => '127.0.0.1',
