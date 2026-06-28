@@ -220,14 +220,17 @@ ALTER TABLE bb_location
 **Zugriffsregeln (eingeloggtes Mitglied U):**
 - **Lesen:** eigener Bestand immer; fremder Mitglieds-Bestand nur bei
   `intern`/`verein`; Vereinsbestand immer. `privat` fremder Mitglieder: nie.
-- **Schreiben:** Mitglieds-Bestand nur der Besitzer; Vereinsbestand der
-  zuständige **Lagerwart** (und berechtigte WSC-Gruppen, z. B. Vorstand, über
-  `wsc.allowed_group_ids`).
+- **Schreiben:** Mitglieds-Bestand nur der Besitzer; **Vereinsbestand** der
+  zuständige **Lagerwart** des Lagers **und** der **Vorstand** (eine
+  konfigurierte WSC-Gruppe, `wsc.board_group_ids`).
 - **Gäste (nicht eingeloggt):** kein Zugriff (App ist mitgliederintern).
 
-> **Freigeben ≠ Verschenken.** `visibility = 'verein'` *stellt bereit*, das
-> Eigentum bleibt beim Mitglied. Eine echte **Eigentumsübertragung** an den
-> Verein ist eine separate, ausdrückliche Aktion (ändert `owner_id`).
+**Zwei getrennte Aktionen für Mitglieds-Bestand:**
+1. **Bereitstellen** – setzt `visibility = 'verein'`. Der Verein darf den Posten
+   sehen/nutzen, das **Eigentum bleibt beim Mitglied**.
+2. **An Verein übertragen** (Spende) – echter **Eigentumswechsel**. Wird als
+   Bewegung protokolliert: `entnahme` aus dem Mitglieds-Bestand + `zugang` in den
+   Vereinsbestand (gleicher Ort), sodass die Mengen-Historie lückenlos bleibt.
 
 ## 4. Die zentrale Logik in Formeln
 
