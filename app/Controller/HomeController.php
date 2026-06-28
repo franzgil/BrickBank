@@ -31,58 +31,76 @@ class HomeController extends Controller
      */
     public function authDebug(): void
     {
+        @ini_set('display_errors', '1');
+        error_reporting(E_ALL);
         header('Content-Type: text/plain; charset=utf-8');
-        $prefix  = (string) \App\Core\Config::get('wsc.table_prefix', 'wcf1_');
-        $cpref   = (string) \App\Core\Config::get('wsc.cookie_prefix', '');
-        $expect  = $cpref . 'user_session';
 
-        echo "== Empfangene Cookies (nur Namen) ==\n";
-        foreach ($_COOKIE as $name => $val) {
-            echo '  ' . $name . '  (len ' . strlen((string) $val) . ")\n";
-        }
-        echo "\nErwarteter Session-Cookie: " . $expect
-            . '  → ' . (isset($_COOKIE[$expect]) ? 'VORHANDEN' : 'FEHLT') . "\n";
+        try {
+            $prefix = (string) \App\Core\Config::get('wsc.table_prefix', 'wcf1_');
+            $cpref  = (string) \App\Core\Config::get('wsc.cookie_prefix', '');
+            $expect = $cpref . 'user_session';
 
-        echo "\n== Erreichbarkeit der WSC-Tabellen ==\n";
-        foreach (['app' => \App\Core\Database::class . '::app', 'wsc(separat)' => \App\Core\Database::class . '::wsc'] as $label => $fn) {
-            try {
-                $pdo = call_user_func($fn);
-                $cnt = $pdo->query('SELECT COUNT(*) FROM ' . $prefix . 'user')->fetchColumn();
-                echo '  ' . $label . ': ' . $prefix . 'user OK (' . $cnt . " Nutzer)\n";
-            } catch (\Throwable $e) {
-                echo '  ' . $label . ': FEHLER ' . $e->getMessage() . "\n";
+            echo "== Konfiguration ==\n";
+            echo '  config/config.php vorhanden: ' . (is_file(BASE_PATH . '/config/config.php') ? 'ja' : 'NEIN (Beispiel-Defaults aktiv)') . "\n";
+            echo '  wsc.same_database: ' . (\App\Core\Config::get('wsc.same_database', false) ? 'true' : 'false') . "\n";
+            echo '  wsc.db.name: ' . (string) \App\Core\Config::get('wsc.db.name', '') . "\n";
+            echo '  table_prefix: ' . $prefix . '   cookie_prefix: ' . $cpref . "\n";
+
+            echo "\n== Empfangene Cookies (nur Namen) ==\n";
+            foreach ($_COOKIE as $name => $val) {
+                echo '  ' . $name . '  (len ' . strlen((string) $val) . ")\n";
             }
-        }
+            echo 'Erwarteter Session-Cookie: ' . $expect
+                . '  → ' . (isset($_COOKIE[$expect]) ? 'VORHANDEN' : 'FEHLT') . "\n";
 
-        echo "\n== Session-Tabellen (über aktive wcf()-Verbindung) ==\n";
-        foreach (['user_session', 'session'] as $t) {
+            echo "\n== Erreichbarkeit wcf1_user ==\n";
+            echo '  app-Verbindung:  ';
             try {
-                $cnt = \App\Core\Database::wcf()->query('SELECT COUNT(*) FROM ' . $prefix . $t)->fetchColumn();
-                echo '  ' . $prefix . $t . ': ' . $cnt . " Zeilen\n";
+                $c = \App\Core\Database::app()->query('SELECT COUNT(*) FROM ' . $prefix . 'user')->fetchColumn();
+                echo 'OK (' . $c . " Nutzer)\n";
             } catch (\Throwable $e) {
-                echo '  ' . $prefix . $t . ": nicht vorhanden/Fehler\n";
+                echo 'FEHLER: ' . $e->getMessage() . "\n";
             }
-        }
-
-        echo "\n== Treffer für aktuelles Session-Cookie ==\n";
-        if (isset($_COOKIE[$expect]) && $_COOKIE[$expect] !== '') {
+            echo '  wsc-Verbindung:  ';
             try {
-                $stmt = \App\Core\Database::wcf()->prepare(
-                    'SELECT userID FROM ' . $prefix . 'user_session WHERE sessionID = ? LIMIT 1'
-                );
-                $stmt->execute([$_COOKIE[$expect]]);
-                $uid = $stmt->fetchColumn();
-                echo '  Lookup ' . $prefix . 'user_session.sessionID: '
-                    . ($uid !== false ? ('Treffer, userID=' . $uid) : 'KEIN Treffer (Cookie-Wert ≠ sessionID)') . "\n";
+                $c = \App\Core\Database::wsc()->query('SELECT COUNT(*) FROM ' . $prefix . 'user')->fetchColumn();
+                echo 'OK (' . $c . " Nutzer)\n";
             } catch (\Throwable $e) {
-                echo '  Lookup-Fehler: ' . $e->getMessage() . "\n";
+                echo 'FEHLER: ' . $e->getMessage() . "\n";
             }
-        } else {
-            echo "  (kein Session-Cookie vorhanden)\n";
-        }
 
-        echo "\n== Ergebnis ==\n";
-        $u = \App\Integration\WcfSession::user();
-        echo '  WcfSession::user() → ' . ($u ? ('userID=' . $u->userId . ' (' . $u->username . ')') : 'null') . "\n";
+            echo "\n== Session-Tabellen (aktive wcf()-Verbindung) ==\n";
+            foreach (['user_session', 'session'] as $t) {
+                echo '  ' . $prefix . $t . ': ';
+                try {
+                    $c = \App\Core\Database::wcf()->query('SELECT COUNT(*) FROM ' . $prefix . $t)->fetchColumn();
+                    echo $c . " Zeilen\n";
+                } catch (\Throwable $e) {
+                    echo "nicht vorhanden/Fehler\n";
+                }
+            }
+
+            echo "\n== Lookup mit aktuellem Cookie ==\n";
+            if (isset($_COOKIE[$expect]) && $_COOKIE[$expect] !== '') {
+                try {
+                    $stmt = \App\Core\Database::wcf()->prepare(
+                        'SELECT userID FROM ' . $prefix . 'user_session WHERE sessionID = ? LIMIT 1'
+                    );
+                    $stmt->execute([$_COOKIE[$expect]]);
+                    $uid = $stmt->fetchColumn();
+                    echo '  ' . ($uid !== false ? ('Treffer, userID=' . $uid) : 'KEIN Treffer (Cookie-Wert ≠ sessionID)') . "\n";
+                } catch (\Throwable $e) {
+                    echo '  Fehler: ' . $e->getMessage() . "\n";
+                }
+            } else {
+                echo "  (kein Session-Cookie vorhanden)\n";
+            }
+
+            echo "\n== Ergebnis ==\n";
+            $u = \App\Integration\WcfSession::user();
+            echo '  WcfSession::user() → ' . ($u ? ('userID=' . $u->userId . ' (' . $u->username . ')') : 'null') . "\n";
+        } catch (\Throwable $e) {
+            echo "\nFATAL: " . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine() . "\n";
+        }
     }
 }
