@@ -63,7 +63,11 @@ class HoldingRepository
             "SELECT h.id, h.quantity, h.cond, h.visibility,
                     o.id AS owner_id, o.name AS owner_name, o.type AS owner_type,
                     i.id AS item_id, i.type AS item_type, i.part_num,
-                    rp.name AS part_name, rc.name AS color_name
+                    rp.name AS part_name, rc.name AS color_name,
+                    (SELECT re.element_id FROM rb_elements re
+                      WHERE i.type = 'element' AND re.part_num = i.part_num
+                            AND re.color_id = i.color_id
+                      ORDER BY re.element_id LIMIT 1) AS element_id
              FROM bb_holding h
              JOIN bb_item  i ON i.id = h.item_id
              JOIN bb_owner o ON o.id = h.owner_id

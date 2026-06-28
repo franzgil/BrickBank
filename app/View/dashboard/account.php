@@ -24,6 +24,7 @@ if (!function_exists('bb_render_branches')) {
             <tr>
               <td style="padding-left:<?= (12 + $pad) ?>px">
                 <?= $depth > 0 ? '└ ' : '' ?>
+                <?php if (!empty($b['image_path'])): ?><img src="<?= e(asset_url($b['image_path'])) ?>" alt="" style="width:34px;height:34px;object-fit:cover;border-radius:5px;vertical-align:middle;margin-right:6px;border:1px solid var(--wcfContentBorder)"> <?php endif; ?>
                 <?php if (!empty($b['code'])): ?><span class="codeTag"><?= e($b['code']) ?></span> <?php endif; ?>
                 <a href="<?= e(base_url('container/' . $id)) ?>"><?= e($b['name']) ?></a>
               </td>

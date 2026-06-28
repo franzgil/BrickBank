@@ -77,13 +77,27 @@ class LocationRepository
     public function treeForOwner(int $ownerId): array
     {
         $stmt = Database::app()->prepare(
-            'SELECT l.id, l.parent_id, l.name, l.kind, l.note, ll.code
+            'SELECT l.id, l.parent_id, l.name, l.kind, l.note, l.image_path, ll.code
              FROM bb_location l
              LEFT JOIN bb_location_label ll ON ll.location_id = l.id
              WHERE l.owner_id = ?
              ORDER BY l.name'
         );
         $stmt->execute([$ownerId]);
+        return $stmt->fetchAll();
+    }
+
+    /** Direkte Unter-Äste eines Ortes inkl. Code/Bild (für die Detailansicht). */
+    public function childrenOf(int $parentId): array
+    {
+        $stmt = Database::app()->prepare(
+            'SELECT l.id, l.name, l.kind, l.image_path, ll.code
+             FROM bb_location l
+             LEFT JOIN bb_location_label ll ON ll.location_id = l.id
+             WHERE l.parent_id = ?
+             ORDER BY COALESCE(ll.code, l.name)'
+        );
+        $stmt->execute([$parentId]);
         return $stmt->fetchAll();
     }
 

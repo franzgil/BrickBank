@@ -48,6 +48,22 @@ if (!function_exists('asset_url')) {
     }
 }
 
+if (!function_exists('part_image_url')) {
+    /**
+     * Bild-URL eines LEGO-Elements über das öffentliche Rebrickable-CDN
+     * (nach offizieller Element-ID). Liefert null, wenn keine ID bekannt ist.
+     * Nicht jede ID hat ein Bild – Views blenden fehlende per onerror aus.
+     */
+    function part_image_url($elementId): ?string
+    {
+        $elementId = trim((string) $elementId);
+        if ($elementId === '') {
+            return null;
+        }
+        return 'https://cdn.rebrickable.com/media/parts/elements/' . rawurlencode($elementId) . '.jpg';
+    }
+}
+
 if (!function_exists('base_url')) {
     /** URL für eine Route (läuft über index.php / PATH_INFO). */
     function base_url(string $path = ''): string

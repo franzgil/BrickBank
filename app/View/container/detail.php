@@ -61,6 +61,34 @@ use App\Service\ContainerRules;
   </div>
 </article>
 
+<?php if (!empty($children)): ?>
+<article class="contentBox">
+  <div class="contentBoxHeader"><span class="icon"></span>Enthaltene Äste / Behälter</div>
+  <div class="contentBoxBody">
+    <table>
+      <thead><tr><th style="width:54px">Bild</th><th>Ast</th><th>Art</th></tr></thead>
+      <tbody>
+        <?php foreach ($children as $c): ?>
+          <tr>
+            <td>
+              <?php if (!empty($c['image_path'])): ?>
+                <img src="<?= e(asset_url($c['image_path'])) ?>" alt=""
+                     style="width:42px;height:42px;object-fit:cover;border-radius:5px;border:1px solid var(--wcfContentBorder)">
+              <?php else: ?>–<?php endif; ?>
+            </td>
+            <td>
+              <?php if (!empty($c['code'])): ?><span class="codeTag"><?= e($c['code']) ?></span> <?php endif; ?>
+              <a href="<?= e(base_url('container/' . $c['id'])) ?>"><?= e($c['name']) ?></a>
+            </td>
+            <td><?= e(ContainerRules::label($c['kind'])) ?></td>
+          </tr>
+        <?php endforeach; ?>
+      </tbody>
+    </table>
+  </div>
+</article>
+<?php endif; ?>
+
 <article class="contentBox">
   <div class="contentBoxHeader"><span class="icon"></span>Bild</div>
   <div class="contentBoxBody">
@@ -95,10 +123,18 @@ use App\Service\ContainerRules;
       <p>Für diesen Behälter sind noch keine Bestandsposten erfasst.</p>
     <?php else: ?>
       <table>
-        <thead><tr><th>Teil-Nr.</th><th>Teil</th><th>Farbe</th><th>Zustand</th><th>Menge</th><th>Besitzer</th><th>Sichtbarkeit</th></tr></thead>
+        <thead><tr><th style="width:54px">Bild</th><th>Teil-Nr.</th><th>Teil</th><th>Farbe</th><th>Zustand</th><th>Menge</th><th>Besitzer</th><th>Sichtbarkeit</th></tr></thead>
         <tbody>
           <?php foreach ($contents as $row): ?>
+            <?php $img = part_image_url($row['element_id'] ?? null); ?>
             <tr>
+              <td>
+                <?php if ($img !== null): ?>
+                  <img src="<?= e($img) ?>" alt="" loading="lazy"
+                       style="width:42px;height:42px;object-fit:contain;border-radius:5px;border:1px solid var(--wcfContentBorder)"
+                       onerror="this.style.display='none'">
+                <?php else: ?>–<?php endif; ?>
+              </td>
               <td><?= e($row['part_num'] ?? '–') ?></td>
               <td><a href="<?= e(base_url('item/' . $row['item_id'])) ?>"><?= e($row['part_name'] ?? ('(' . $row['item_type'] . ')')) ?></a></td>
               <td><?= e($row['color_name'] ?? '–') ?></td>

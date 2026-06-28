@@ -109,6 +109,7 @@ class ContainerController extends Controller
             'title'     => $container['code'] ?? $container['name'],
             'nav'       => 'container',
             'container' => $container,
+            'children'  => $this->locations->childrenOf((int) $id),
             'contents'  => $this->holdings->contentsOfLocation((int) $id, $viewer ? $viewer->userId : null),
             'csrf'      => Csrf::token(),
         ]);
