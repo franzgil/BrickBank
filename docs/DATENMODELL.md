@@ -55,31 +55,25 @@ Selbst-referenzierend über `parent_id`, dadurch beliebig tiefe Hierarchien
 | `kind` | ENUM('raum','schrank','schublade','box','fach','sonstiges') | Art des Ortes |
 | `note` | VARCHAR(255), NULL | freie Notiz |
 
-### `part` — Teil (farbunabhängig)
-| Spalte | Typ | Beschreibung |
-|--------|-----|--------------|
-| `id` | INT, PK, AUTO_INCREMENT | |
-| `part_no` | VARCHAR(40), UNIQUE | Teilenummer (z. B. BrickLink/LEGO-Design-ID) |
-| `name` | VARCHAR(190) | z. B. „Brick 2 x 4“ |
-| `category` | VARCHAR(80), NULL | z. B. „Brick“, „Plate“, „Technic“ |
+### Katalog (Teile & Farben) — aus Rebrickable
+Teile, Farben und ihre Detaildaten kommen aus dem **Rebrickable-Datensatz**
+(`rb_parts`, `rb_part_categories`, `rb_colors`, `rb_elements`, …) in derselben
+Datenbank, **nur lesend**. BrickBank pflegt dafür keine eigenen Teil-/Farbtabellen
+mehr. Details: [REBRICKABLE.md](REBRICKABLE.md).
 
-### `color` — Farbe
-| Spalte | Typ | Beschreibung |
-|--------|-----|--------------|
-| `id` | INT, PK, AUTO_INCREMENT | |
-| `name` | VARCHAR(80) | z. B. „Bright Red“ |
-| `code` | VARCHAR(20), NULL | externer Farbcode (z. B. BrickLink-ID) |
-| `hex` | CHAR(6), NULL | RGB für Darstellung |
-
-### `element` — Teil + Farbe
-Die zählbare Einheit. Eindeutig je Kombination aus `part_id` + `color_id`.
+### `element` — Teil + Farbe (zählbare Einheit)
+Verweist auf den Rebrickable-Katalog. Eindeutig je Kombination aus
+`part_num` + `color_id`.
 
 | Spalte | Typ | Beschreibung |
 |--------|-----|--------------|
 | `id` | INT, PK, AUTO_INCREMENT | |
-| `part_id` | INT, FK → part.id | |
-| `color_id` | INT, FK → color.id | |
-| | UNIQUE(`part_id`,`color_id`) | verhindert Dubletten |
+| `part_num` | VARCHAR(20) | → `rb_parts.part_num` |
+| `color_id` | INT | → `rb_colors.id` |
+| | UNIQUE(`part_num`,`color_id`) | verhindert Dubletten |
+
+> Bewusst **keine** harten Fremdschlüssel auf `rb_*`, damit der Rebrickable-
+> Datensatz unabhängig neu eingespielt werden kann.
 
 ### `inventory_item` — Bestandsposten
 Das Herzstück: „**Menge** eines **Elements** an einem **Ort**, das einem
@@ -127,27 +121,14 @@ CREATE TABLE bb_location (
   FOREIGN KEY (parent_id) REFERENCES bb_location(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE bb_part (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  part_no VARCHAR(40) NOT NULL UNIQUE,
-  name VARCHAR(190) NOT NULL,
-  category VARCHAR(80) NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-CREATE TABLE bb_color (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(80) NOT NULL,
-  code VARCHAR(20) NULL,
-  hex CHAR(6) NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
+-- Teile/Farben kommen aus Rebrickable (rb_parts, rb_colors) – keine eigenen Tabellen.
 CREATE TABLE bb_element (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  part_id INT NOT NULL,
-  color_id INT NOT NULL,
-  UNIQUE KEY uq_element (part_id, color_id),
-  FOREIGN KEY (part_id) REFERENCES bb_part(id),
-  FOREIGN KEY (color_id) REFERENCES bb_color(id)
+  part_num VARCHAR(20) NOT NULL,     -- → rb_parts.part_num
+  color_id INT NOT NULL,             -- → rb_colors.id
+  UNIQUE KEY uq_element (part_num, color_id),
+  KEY idx_element_part (part_num),
+  KEY idx_element_color (color_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE bb_inventory_item (
@@ -187,24 +168,22 @@ in `location.parent_id` und ist jederzeit änderbar, ohne das Etikett neu zu dru
 ### Beispielabfragen
 
 ```sql
--- Was ist in Tüte T-000345?
-SELECT p.part_no, p.name, c.name AS farbe, ii.quantity
+-- Was ist in Tüte T-000345?  (Detaildaten aus Rebrickable)
+SELECT e.part_num, rp.name AS teil, rc.name AS farbe, ii.quantity
 FROM bb_location_label ll
 JOIN bb_inventory_item ii ON ii.location_id = ll.location_id
 JOIN bb_element e  ON e.id = ii.element_id
-JOIN bb_part p     ON p.id = e.part_id
-JOIN bb_color c    ON c.id = e.color_id
+JOIN rb_parts rp   ON rp.part_num = e.part_num
+JOIN rb_colors rc  ON rc.id = e.color_id
 WHERE ll.code = 'T-000345';
 
--- In welcher physischen Tüte liegen unsere roten 2x4?
+-- In welcher physischen Tüte liegen unsere roten 2x4 (part 3001, color 4)?
 SELECT ll.code, l.name AS behaelter, ii.quantity
-FROM bb_part p
-JOIN bb_element e        ON e.part_id = p.id
-JOIN bb_color c          ON c.id = e.color_id
+FROM bb_element e
 JOIN bb_inventory_item ii ON ii.element_id = e.id
-JOIN bb_location l       ON l.id = ii.location_id
+JOIN bb_location l        ON l.id = ii.location_id
 JOIN bb_location_label ll ON ll.location_id = l.id
-WHERE p.part_no = '3001' AND c.name = 'Bright Red';
+WHERE e.part_num = '3001' AND e.color_id = 4;
 
 -- Bewegungshistorie eines Behälters (neueste zuerst).
 SELECT moved_at, from_code, to_code, wcf_user_id, note

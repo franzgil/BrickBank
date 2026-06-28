@@ -54,7 +54,11 @@ cp config/config.example.php config/config.php
 # 2. Datenbank einrichten (Reihenfolge siehe sql/README.md)
 mysql brickbank < sql/schema.sql
 mysql brickbank < sql/migrations/001_module_behaelter_inventur.sql
+mysql brickbank < sql/migrations/002_katalog_rebrickable.sql
 mysql brickbank < sql/seed.sql        # optional
+
+# Teile/Farben kommen aus dem Rebrickable-Katalog (rb_*-Tabellen, gleiche DB,
+# nur lesend) – per Rebrickable-Import bereitstellen. Siehe docs/REBRICKABLE.md
 
 # 3. Webserver-DocumentRoot auf public/ zeigen lassen
 #    (lokal zum Testen:)

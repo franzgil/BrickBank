@@ -94,37 +94,22 @@
             </tbody>
           </table>
 
-          <h3>part — Teil (farbunabhängig)</h3>
-          <table>
-            <thead><tr><th>Spalte</th><th>Typ</th><th>Beschreibung</th></tr></thead>
-            <tbody>
-              <tr><td><code>id</code></td><td>INT, PK, AUTO_INCREMENT</td><td></td></tr>
-              <tr><td><code>part_no</code></td><td>VARCHAR(40), UNIQUE</td><td>Teilenummer (z.&nbsp;B. BrickLink/LEGO-Design-ID)</td></tr>
-              <tr><td><code>name</code></td><td>VARCHAR(190)</td><td>z.&nbsp;B. „Brick 2 x 4“</td></tr>
-              <tr><td><code>category</code></td><td>VARCHAR(80), NULL</td><td>z.&nbsp;B. „Brick“, „Plate“, „Technic“</td></tr>
-            </tbody>
-          </table>
+          <h3>Katalog (Teile &amp; Farben) — aus Rebrickable</h3>
+          <p>Teile, Farben und Detaildaten kommen aus dem <strong>Rebrickable-Datensatz</strong>
+             (<code>rb_parts</code>, <code>rb_part_categories</code>, <code>rb_colors</code>,
+             <code>rb_elements</code>, …) in derselben Datenbank, <strong>nur lesend</strong>.
+             BrickBank pflegt keine eigenen Teil-/Farbtabellen mehr.</p>
 
-          <h3>color — Farbe</h3>
+          <h3>element — Teil + Farbe (zählbare Einheit)</h3>
+          <p>Verweist auf den Rebrickable-Katalog. Eindeutig je Kombination aus
+             <code>part_num</code> + <code>color_id</code>.</p>
           <table>
             <thead><tr><th>Spalte</th><th>Typ</th><th>Beschreibung</th></tr></thead>
             <tbody>
               <tr><td><code>id</code></td><td>INT, PK, AUTO_INCREMENT</td><td></td></tr>
-              <tr><td><code>name</code></td><td>VARCHAR(80)</td><td>z.&nbsp;B. „Bright Red“</td></tr>
-              <tr><td><code>code</code></td><td>VARCHAR(20), NULL</td><td>externer Farbcode (z.&nbsp;B. BrickLink-ID)</td></tr>
-              <tr><td><code>hex</code></td><td>CHAR(6), NULL</td><td>RGB für Darstellung</td></tr>
-            </tbody>
-          </table>
-
-          <h3>element — Teil + Farbe</h3>
-          <p>Die zählbare Einheit. Eindeutig je Kombination aus <code>part_id</code> + <code>color_id</code>.</p>
-          <table>
-            <thead><tr><th>Spalte</th><th>Typ</th><th>Beschreibung</th></tr></thead>
-            <tbody>
-              <tr><td><code>id</code></td><td>INT, PK, AUTO_INCREMENT</td><td></td></tr>
-              <tr><td><code>part_id</code></td><td>INT, FK → part.id</td><td></td></tr>
-              <tr><td><code>color_id</code></td><td>INT, FK → color.id</td><td></td></tr>
-              <tr><td><code>UNIQUE(part_id, color_id)</code></td><td></td><td>verhindert Dubletten</td></tr>
+              <tr><td><code>part_num</code></td><td>VARCHAR(20)</td><td>→ <code>rb_parts.part_num</code></td></tr>
+              <tr><td><code>color_id</code></td><td>INT</td><td>→ <code>rb_colors.id</code></td></tr>
+              <tr><td><code>UNIQUE(part_num, color_id)</code></td><td></td><td>verhindert Dubletten (keine harten FKs auf rb_*)</td></tr>
             </tbody>
           </table>
 
@@ -180,27 +165,14 @@ CREATE TABLE bb_location (
   FOREIGN KEY (parent_id) REFERENCES bb_location(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE bb_part (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  part_no VARCHAR(40) NOT NULL UNIQUE,
-  name VARCHAR(190) NOT NULL,
-  category VARCHAR(80) NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-CREATE TABLE bb_color (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(80) NOT NULL,
-  code VARCHAR(20) NULL,
-  hex CHAR(6) NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
+-- Teile/Farben kommen aus Rebrickable (rb_parts, rb_colors) – keine eigenen Tabellen.
 CREATE TABLE bb_element (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  part_id INT NOT NULL,
-  color_id INT NOT NULL,
-  UNIQUE KEY uq_element (part_id, color_id),
-  FOREIGN KEY (part_id) REFERENCES bb_part(id),
-  FOREIGN KEY (color_id) REFERENCES bb_color(id)
+  part_num VARCHAR(20) NOT NULL,     -- → rb_parts.part_num
+  color_id INT NOT NULL,             -- → rb_colors.id
+  UNIQUE KEY uq_element (part_num, color_id),
+  KEY idx_element_part (part_num),
+  KEY idx_element_color (color_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE bb_inventory_item (

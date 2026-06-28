@@ -30,30 +30,17 @@ CREATE TABLE bb_location (
   FOREIGN KEY (parent_id) REFERENCES bb_location(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- --- Teil (farbunabhängig) ------------------------------------------
-CREATE TABLE bb_part (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  part_no VARCHAR(40) NOT NULL UNIQUE,
-  name VARCHAR(190) NOT NULL,
-  category VARCHAR(80) NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- --- Farbe ----------------------------------------------------------
-CREATE TABLE bb_color (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(80) NOT NULL,
-  code VARCHAR(20) NULL,
-  hex CHAR(6) NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
 -- --- Element (Teil + Farbe = zählbare Einheit) ----------------------
+-- Verweist auf den Rebrickable-Katalog (rb_parts.part_num, rb_colors.id).
+-- Bewusst KEINE harten Fremdschlüssel auf rb_*, damit der Rebrickable-
+-- Datensatz unabhängig (TRUNCATE+Reload) neu eingespielt werden kann.
 CREATE TABLE bb_element (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  part_id INT NOT NULL,
-  color_id INT NOT NULL,
-  UNIQUE KEY uq_element (part_id, color_id),
-  FOREIGN KEY (part_id) REFERENCES bb_part(id),
-  FOREIGN KEY (color_id) REFERENCES bb_color(id)
+  part_num VARCHAR(20) NOT NULL,     -- → rb_parts.part_num
+  color_id INT NOT NULL,             -- → rb_colors.id
+  UNIQUE KEY uq_element (part_num, color_id),
+  KEY idx_element_part (part_num),
+  KEY idx_element_color (color_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --- Bestandsposten -------------------------------------------------
