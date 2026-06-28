@@ -33,7 +33,8 @@ aber im selben System durchsuchbar.
 
 | Dokument | Inhalt |
 |----------|--------|
-| [`docs/KONZEPT.md`](docs/KONZEPT.md) | Domäne, Anwendungsfälle, Begriffe |
+| [`docs/KONZEPT-2.0.md`](docs/KONZEPT-2.0.md) | **Überarbeitete Logik** (Items, Bestand+Audit, Verleih, Projekte) — Entwurf |
+| [`docs/KONZEPT.md`](docs/KONZEPT.md) | Domäne, Anwendungsfälle, Begriffe (Ursprungsversion) |
 | [`docs/DATENMODELL.md`](docs/DATENMODELL.md) | Entitäten und ihre Beziehungen |
 | [`docs/ARCHITEKTUR.md`](docs/ARCHITEKTUR.md) | MVC-Aufbau, Projektstruktur, Sicherheit |
 | [`docs/INTEGRATION.md`](docs/INTEGRATION.md) | WoltLab-Suite-5.5-Kopplung (SSO) |
