@@ -296,9 +296,10 @@ Bestehende Behälter-Inhalte (heute `bb_inventory_item`) werden 1:1 zu
 `zugang`-Bewegung als Startbestand.
 
 ## 8. Roadmap (phasiert, jede Phase eigenständig nutzbar)
-- **Phase A — Fundament 2.0:** `bb_item` + `bb_holding` + `bb_inventory_movement`;
-  Migration von `bb_element`/`bb_inventory_item`; Erfassen/Entnehmen/Umbuchen mit
-  Audit; **Bestand & Verfügbarkeit** anzeigen.
+- **Phase A — Fundament 2.0:** ✅ umgesetzt. `bb_item` + `bb_holding`
+  (+ Sichtbarkeit/Zustand) + `bb_inventory_movement`; Migration 003 von
+  `bb_element`/`bb_inventory_item`; Erfassen (Zustand/Besitzer/Sichtbarkeit),
+  Entnehmen, Umbuchen mit Audit; Bestands-/Verfügbarkeitsübersicht + globale Suche.
 - **Phase B — Sets & Minifiguren:** als Items suchen/erfassen (aus `rb_sets`/`rb_minifigs`).
 - **Phase C — Verleih:** `bb_loan`; Übersicht offen/überfällig; Rückgabe.
 - **Phase D — Projekte/MOC:** `bb_project`/`bb_project_part`; Stückliste,
