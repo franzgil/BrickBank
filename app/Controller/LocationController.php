@@ -9,6 +9,7 @@ use App\Model\Repository\LocationRepository;
 use App\Model\Repository\OwnerRepository;
 use App\Service\CodeGenerator;
 use App\Service\ContainerRules;
+use App\Service\ImageUpload;
 
 /**
  * Lagerbaum eines Kontos: Äste (Standorte/Behälter) anlegen und verschieben.
@@ -113,6 +114,33 @@ class LocationController extends Controller
         }
 
         $result = $this->locations->moveBranch($locationId, $toParentId);
+        $this->flash($result['ok'] ? 'success' : 'error', $result['message']);
+        $this->redirect(base_url('account/' . $accountId));
+    }
+
+    /** Ast löschen (nur wenn leer). */
+    public function deleteBranch($id): void
+    {
+        $user      = $this->requireLogin();
+        $accountId = (int) $id;
+        $owner     = $this->owners->find($accountId);
+        if ($owner === null || !$this->mayEdit($owner, $user)) {
+            $this->flash('error', 'Keine Berechtigung für diesen Lagerbaum.');
+            $this->redirect(base_url('account/' . $accountId));
+        }
+        Csrf::validate($this->request->post('csrf_token'));
+
+        $locationId = (int) $this->request->post('location_id', 0);
+        $branch     = $this->locations->find($locationId);
+        if ($branch === null || (int) $branch['owner_id'] !== $accountId) {
+            $this->flash('error', 'Ast gehört nicht zu diesem Konto.');
+            $this->redirect(base_url('account/' . $accountId));
+        }
+
+        $result = $this->locations->deleteBranch($locationId);
+        if ($result['ok'] && !empty($result['image_path'])) {
+            ImageUpload::deletePublic($result['image_path']);
+        }
         $this->flash($result['ok'] ? 'success' : 'error', $result['message']);
         $this->redirect(base_url('account/' . $accountId));
     }

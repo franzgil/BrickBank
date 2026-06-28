@@ -114,6 +114,25 @@ class ContainerController extends Controller
         ]);
     }
 
+    /** Behälter (Ast) löschen – nur wenn leer. */
+    public function delete($id): void
+    {
+        $this->requireLogin();
+        Csrf::validate($this->request->post('csrf_token'));
+        $container = $this->labels->find((int) $id);
+        if ($container === null) {
+            http_response_code(404);
+            echo 'Behälter nicht gefunden';
+            return;
+        }
+        $res = $this->locations->deleteBranch((int) $id);
+        if ($res['ok'] && !empty($res['image_path'])) {
+            \App\Service\ImageUpload::deletePublic($res['image_path']);
+        }
+        $this->flash($res['ok'] ? 'success' : 'error', $res['message']);
+        $this->redirect($res['ok'] ? base_url('container') : base_url('container/' . (int) $id));
+    }
+
     /** Bild eines Behälters/Astes hochladen. */
     public function uploadImage($id): void
     {

@@ -43,6 +43,14 @@ if (!function_exists('bb_render_branches')) {
                   </select>
                   <button type="submit" class="btn-ghost btn-sm" title="verschieben">→</button>
                 </form>
+                <?php if (empty($byParent[$id]) && (($summary[$id]['cnt'] ?? 0) === 0)): ?>
+                  <form method="post" action="<?= e(base_url('account/' . $accId . '/branch/delete')) ?>"
+                        style="display:inline" onsubmit="return confirm('Diesen leeren Ast löschen?')">
+                    <input type="hidden" name="csrf_token" value="<?= e($csrf) ?>">
+                    <input type="hidden" name="location_id" value="<?= $id ?>">
+                    <button type="submit" class="btn-ghost btn-sm" title="löschen">🗑</button>
+                  </form>
+                <?php endif; ?>
               </td>
               <?php endif; ?>
             </tr>

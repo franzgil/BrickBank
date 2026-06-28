@@ -23,12 +23,14 @@ $router->get('/dashboard', [DashboardController::class, 'index']);
 $router->get('/account/{id}', [DashboardController::class, 'account']);
 $router->post('/account/{id}/branch', [LocationController::class, 'addBranch']);
 $router->post('/account/{id}/branch/move', [LocationController::class, 'moveBranch']);
+$router->post('/account/{id}/branch/delete', [LocationController::class, 'deleteBranch']);
 
 // --- Behälter (Container/Karton/Tüte) ---
 $router->get('/container', [ContainerController::class, 'index']);
 $router->get('/container/new', [ContainerController::class, 'create']);
 $router->post('/container', [ContainerController::class, 'store']);
 $router->get('/container/{id}', [ContainerController::class, 'show']);
+$router->post('/container/{id}/delete', [ContainerController::class, 'delete']);
 $router->get('/container/{id}/history', [MoveController::class, 'history']);
 $router->post('/container/{id}/custom-code', [ContainerController::class, 'setCustomCode']);
 $router->post('/container/{id}/image', [ContainerController::class, 'uploadImage']);

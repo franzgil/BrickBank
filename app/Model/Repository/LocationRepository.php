@@ -25,6 +25,36 @@ class LocationRepository
             ->execute([$path, $id]);
     }
 
+    /**
+     * Löscht einen Ast – nur wenn leer (keine Unter-Äste, kein Bestand).
+     * @return array{ok:bool,message:string,image_path:?string}
+     */
+    public function deleteBranch(int $id): array
+    {
+        $db = Database::app();
+
+        $c = $db->prepare('SELECT COUNT(*) FROM bb_location WHERE parent_id = ?');
+        $c->execute([$id]);
+        if ((int) $c->fetchColumn() > 0) {
+            return ['ok' => false, 'message' => 'Ast hat Unter-Äste – diese zuerst löschen oder verschieben.', 'image_path' => null];
+        }
+
+        $h = $db->prepare('SELECT COUNT(*) FROM bb_holding WHERE location_id = ?');
+        $h->execute([$id]);
+        if ((int) $h->fetchColumn() > 0) {
+            return ['ok' => false, 'message' => 'Ast enthält Bestand – zuerst entnehmen oder umbuchen.', 'image_path' => null];
+        }
+
+        $img = $db->prepare('SELECT image_path FROM bb_location WHERE id = ?');
+        $img->execute([$id]);
+        $imagePath = $img->fetchColumn();
+
+        // bb_location_label / _movement hängen per ON DELETE CASCADE mit.
+        $db->prepare('DELETE FROM bb_location WHERE id = ?')->execute([$id]);
+
+        return ['ok' => true, 'message' => 'Ast gelöscht.', 'image_path' => $imagePath ?: null];
+    }
+
     /** Alle Äste eines Kontos (für den Lagerbaum), inkl. Behälter-Code. */
     public function treeForOwner(int $ownerId): array
     {

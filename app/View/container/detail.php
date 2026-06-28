@@ -44,6 +44,13 @@ use App\Service\ContainerRules;
         <a class="btn btn-sm" href="<?= e(base_url('move?code=' . urlencode($container['code']))) ?>">Umräumen</a>
       <?php endif; ?>
       <a class="btn-ghost btn-sm" href="<?= e(base_url('container/' . $container['id'] . '/history')) ?>">Verlauf</a>
+      <?php if ($currentUser !== null): ?>
+        <form method="post" action="<?= e(base_url('container/' . $container['id'] . '/delete')) ?>"
+              style="display:inline" onsubmit="return confirm('Diesen Behälter löschen? Geht nur, wenn er leer ist.')">
+          <input type="hidden" name="csrf_token" value="<?= e($csrf) ?>">
+          <button type="submit" class="btn-ghost btn-sm">Löschen</button>
+        </form>
+      <?php endif; ?>
     </p>
   </div>
 </article>
