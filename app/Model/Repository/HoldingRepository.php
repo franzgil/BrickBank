@@ -140,4 +140,46 @@ class HoldingRepository
     {
         return $this->onHandByItem($itemId, $viewer); // − reserviert (Phase C/D)
     }
+
+    /**
+     * „Konten" (Besitzer), zu deren Bestand der Betrachter Zugang hat,
+     * mit Kennzahlen – für das Dashboard.
+     */
+    public function accountsForViewer(?int $viewer): array
+    {
+        $stmt = Database::app()->prepare(
+            'SELECT o.id, o.name, o.type, o.wcf_user_id,
+                    COUNT(*) AS positions,
+                    COALESCE(SUM(h.quantity),0) AS total_qty
+             FROM bb_holding h
+             JOIN bb_owner o ON o.id = h.owner_id
+             WHERE ' . $this->visClause() . '
+             GROUP BY o.id
+             ORDER BY (o.type = \'verein\') DESC, (o.wcf_user_id = ?) DESC, o.name'
+        );
+        $stmt->execute([$viewer, $viewer]);
+        return $stmt->fetchAll();
+    }
+
+    /** Sichtbare Bestände eines Besitzers (für die Konto-Detailseite). */
+    public function holdingsForOwner(int $ownerId, ?int $viewer): array
+    {
+        $stmt = Database::app()->prepare(
+            "SELECT h.id, h.quantity, h.cond, h.visibility,
+                    i.id AS item_id, i.type AS item_type, i.part_num,
+                    rp.name AS part_name, rc.name AS color_name,
+                    l.name AS location_name, ll.code AS location_code
+             FROM bb_holding h
+             JOIN bb_item  i ON i.id = h.item_id
+             JOIN bb_owner o ON o.id = h.owner_id
+             JOIN bb_location l ON l.id = h.location_id
+             LEFT JOIN bb_location_label ll ON ll.location_id = l.id
+             LEFT JOIN rb_parts  rp ON i.type = 'element' AND rp.part_num = i.part_num
+             LEFT JOIN rb_colors rc ON i.type = 'element' AND rc.id = i.color_id
+             WHERE h.owner_id = ? AND " . $this->visClause() . "
+             ORDER BY rp.name, rc.name, h.cond"
+        );
+        $stmt->execute([$ownerId, $viewer]);
+        return $stmt->fetchAll();
+    }
 }

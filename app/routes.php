@@ -6,6 +6,7 @@
  */
 
 use App\Controller\HomeController;
+use App\Controller\DashboardController;
 use App\Controller\ContainerController;
 use App\Controller\MoveController;
 use App\Controller\LabelController;
@@ -15,6 +16,10 @@ use App\Controller\StockController;
 
 $router->get('/', [HomeController::class, 'index']);
 $router->get('/ping', [HomeController::class, 'ping']);   // Diagnose ohne DB
+
+// --- Dashboard / Konten ---
+$router->get('/dashboard', [DashboardController::class, 'index']);
+$router->get('/account/{id}', [DashboardController::class, 'account']);
 
 // --- Behälter (Container/Karton/Tüte) ---
 $router->get('/container', [ContainerController::class, 'index']);
