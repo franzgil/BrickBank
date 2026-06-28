@@ -2,16 +2,20 @@
 namespace App\Service;
 
 /**
- * Fachregeln für die Behälter-Hierarchie (Tüte → Karton → Container → Lagerort).
- * Wird sowohl beim Anlegen (Standort setzen) als auch beim Umräumen genutzt.
+ * Hinweise zur empfohlenen Behälter-Hierarchie (Tüte → Karton → Container → Ort).
+ * Die Reihenfolge ist im freien Lagerbaum nur eine EMPFEHLUNG, kein Zwang:
+ * jeder Ast darf überall hängen (auch direkt am Konto-Root).
  */
 class ContainerRules
 {
-    /**
-     * Darf ein Behälter vom Typ $kind unter einen Ort vom Typ $parentKind?
-     * $parentKind === null bedeutet „kein Standort gesetzt" und ist erlaubt.
-     */
+    /** Freier Baum: jeder Zielort ist erlaubt. */
     public static function parentAllowed(string $kind, ?string $parentKind): bool
+    {
+        return true;
+    }
+
+    /** Entspricht die Platzierung der empfohlenen Reihenfolge? (für Hinweise) */
+    public static function isRecommended(string $kind, ?string $parentKind): bool
     {
         if ($parentKind === null) {
             return true;
@@ -24,22 +28,21 @@ class ContainerRules
             case 'container':
                 return !CodeGenerator::isContainerKind($parentKind);
         }
-        return false;
+        return true;
     }
 
-    /** Verständliche Fehlermeldung zur Regel des jeweiligen Typs. */
+    /** Empfehlungs-Hinweis (kein Fehler). */
     public static function ruleMessage(string $kind): string
     {
         switch ($kind) {
             case 'tuete':
-                return 'Eine Tüte darf nur in einen Karton.';
+                return 'Empfohlen: Tüte in einen Karton.';
             case 'karton':
-                return 'Ein Karton darf nur in einen Container.';
+                return 'Empfohlen: Karton in einen Container.';
             case 'container':
-                return 'Ein Container darf nur an einen normalen Lagerort (Raum, Schrank …), '
-                     . 'nicht in einen anderen Behälter.';
+                return 'Empfohlen: Container an einen normalen Lagerort (Raum, Schrank …).';
         }
-        return 'Ungültiger Zielort.';
+        return '';
     }
 
     /** Lesbare Bezeichnung eines Behältertyps. */

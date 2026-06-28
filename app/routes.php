@@ -7,6 +7,7 @@
 
 use App\Controller\HomeController;
 use App\Controller\DashboardController;
+use App\Controller\LocationController;
 use App\Controller\ContainerController;
 use App\Controller\MoveController;
 use App\Controller\LabelController;
@@ -20,6 +21,8 @@ $router->get('/ping', [HomeController::class, 'ping']);   // Diagnose ohne DB
 // --- Dashboard / Konten ---
 $router->get('/dashboard', [DashboardController::class, 'index']);
 $router->get('/account/{id}', [DashboardController::class, 'account']);
+$router->post('/account/{id}/branch', [LocationController::class, 'addBranch']);
+$router->post('/account/{id}/branch/move', [LocationController::class, 'moveBranch']);
 
 // --- Behälter (Container/Karton/Tüte) ---
 $router->get('/container', [ContainerController::class, 'index']);

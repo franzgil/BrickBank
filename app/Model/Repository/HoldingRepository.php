@@ -161,6 +161,25 @@ class HoldingRepository
         return $stmt->fetchAll();
     }
 
+    /** Sichtbare Bestands-Summen je Ast eines Konto-Baums: location_id → [cnt, qty]. */
+    public function summaryByLocationForOwnerTree(int $accountOwnerId, ?int $viewer): array
+    {
+        $stmt = Database::app()->prepare(
+            'SELECT h.location_id, COUNT(*) AS cnt, COALESCE(SUM(h.quantity),0) AS qty
+             FROM bb_holding h
+             JOIN bb_owner o    ON o.id = h.owner_id
+             JOIN bb_location l ON l.id = h.location_id
+             WHERE l.owner_id = ? AND ' . $this->visClause() . '
+             GROUP BY h.location_id'
+        );
+        $stmt->execute([$accountOwnerId, $viewer]);
+        $map = [];
+        foreach ($stmt->fetchAll() as $r) {
+            $map[(int) $r['location_id']] = ['cnt' => (int) $r['cnt'], 'qty' => (int) $r['qty']];
+        }
+        return $map;
+    }
+
     /** Sichtbare Bestände eines Besitzers (für die Konto-Detailseite). */
     public function holdingsForOwner(int $ownerId, ?int $viewer): array
     {

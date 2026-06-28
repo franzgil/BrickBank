@@ -25,8 +25,9 @@ class LabelRepository
         $db = Database::app();
         $db->beginTransaction();
         try {
-            $stmt = $db->prepare('INSERT INTO bb_location (parent_id, name, kind, note) VALUES (?,?,?,?)');
-            $stmt->execute([$parentId, $name, $kind, $note]);
+            // owner_id = Konto (Wurzel des Baums), zu dem dieser Behälter-Ast gehört.
+            $stmt = $db->prepare('INSERT INTO bb_location (parent_id, owner_id, name, kind, note) VALUES (?,?,?,?,?)');
+            $stmt->execute([$parentId, $ownerId, $name, $kind, $note]);
             $locationId = (int) $db->lastInsertId();
 
             $seq  = $this->nextSeq($db, $kind);

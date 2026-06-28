@@ -24,14 +24,17 @@ CREATE TABLE bb_owner (
 -- --- Lagerort (hierarchisch) + Etiketten/Behälter --------------------
 CREATE TABLE bb_location (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  parent_id INT NULL,
+  parent_id INT NULL,                 -- übergeordneter Ast; NULL = direkt am Konto-Root
+  owner_id INT NULL,                  -- Konto (Wurzel des Baums), zu dem dieser Ast gehört
   name VARCHAR(120) NOT NULL,
   kind ENUM('raum','schrank','schublade','box','fach','sonstiges',
             'container','karton','tuete') NOT NULL DEFAULT 'sonstiges',
   note VARCHAR(255) NULL,
   managed_by_wcf_user_id INT NULL,   -- Lagerwart (WSC-Mitglied), optional
   KEY idx_location_parent (parent_id),
-  FOREIGN KEY (parent_id) REFERENCES bb_location(id) ON DELETE SET NULL
+  KEY idx_location_owner (owner_id),
+  FOREIGN KEY (parent_id) REFERENCES bb_location(id) ON DELETE SET NULL,
+  FOREIGN KEY (owner_id) REFERENCES bb_owner(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE bb_location_label (

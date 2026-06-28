@@ -72,13 +72,8 @@ class ContainerController extends Controller
         if ($name === '') {
             $errors[] = 'Name darf nicht leer sein.';
         }
-        if (!$errors && $parentId !== null) {
-            $parent = $this->locations->find($parentId);
-            if ($parent === null) {
-                $errors[] = 'Gewählter Standort wurde nicht gefunden.';
-            } elseif (!ContainerRules::parentAllowed($kind, $parent['kind'])) {
-                $errors[] = ContainerRules::ruleMessage($kind);
-            }
+        if (!$errors && $parentId !== null && $this->locations->find($parentId) === null) {
+            $errors[] = 'Gewählter Standort wurde nicht gefunden.';
         }
 
         if ($errors) {
@@ -87,6 +82,12 @@ class ContainerController extends Controller
                 'old'    => compact('kind', 'name', 'parentId', 'ownerId', 'note'),
             ]));
             return;
+        }
+
+        // Jeder Ast gehört zu einem Konto; ohne Auswahl dem Verein zuordnen.
+        if ($ownerId === null) {
+            $verein  = $this->owners->verein();
+            $ownerId = $verein ? (int) $verein['id'] : null;
         }
 
         $created = $this->labels->createContainer($kind, $name, $parentId, $ownerId, $note);

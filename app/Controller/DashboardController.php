@@ -2,8 +2,10 @@
 namespace App\Controller;
 
 use App\Core\Controller;
-use App\Integration\WcfSession;
+use App\Core\Csrf;
+use App\Integration\WcfUser;
 use App\Model\Repository\HoldingRepository;
+use App\Model\Repository\LocationRepository;
 use App\Model\Repository\OwnerRepository;
 
 /**
@@ -16,12 +18,15 @@ class DashboardController extends Controller
     private $holdings;
     /** @var OwnerRepository */
     private $owners;
+    /** @var LocationRepository */
+    private $locations;
 
     public function __construct()
     {
         parent::__construct();
-        $this->holdings = new HoldingRepository();
-        $this->owners   = new OwnerRepository();
+        $this->holdings  = new HoldingRepository();
+        $this->owners    = new OwnerRepository();
+        $this->locations = new LocationRepository();
     }
 
     public function index(): void
@@ -45,12 +50,30 @@ class DashboardController extends Controller
             echo 'Konto nicht gefunden';
             return;
         }
+        $branches = $this->locations->treeForOwner((int) $id);
+        $byParent = [];
+        foreach ($branches as $b) {
+            $byParent[(int) $b['parent_id']][] = $b;   // parent_id NULL → Schlüssel 0 (Root)
+        }
+
         $this->render('dashboard/account', [
             'title'    => 'Konto · ' . $owner['name'],
             'nav'      => 'dashboard',
             'owner'    => $owner,
             'isMe'     => (int) $owner['wcf_user_id'] === $user->userId,
-            'holdings' => $this->holdings->holdingsForOwner((int) $id, $user->userId),
+            'byParent' => $byParent,
+            'branches' => $branches,
+            'summary'  => $this->holdings->summaryByLocationForOwnerTree((int) $id, $user->userId),
+            'canEdit'  => $this->mayEdit($owner, $user),
+            'csrf'     => Csrf::token(),
         ]);
+    }
+
+    private function mayEdit(array $owner, WcfUser $user): bool
+    {
+        if ($owner['type'] === 'verein') {
+            return $user->canWrite();
+        }
+        return ((int) $owner['wcf_user_id'] === $user->userId) || $user->canWrite();
     }
 }

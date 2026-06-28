@@ -11,11 +11,55 @@ class LocationRepository
     public function find(int $id): ?array
     {
         $stmt = Database::app()->prepare(
-            'SELECT id, parent_id, name, kind, note FROM bb_location WHERE id = ? LIMIT 1'
+            'SELECT id, parent_id, owner_id, name, kind, note FROM bb_location WHERE id = ? LIMIT 1'
         );
         $stmt->execute([$id]);
         $row = $stmt->fetch();
         return $row ?: null;
+    }
+
+    /** Alle Äste eines Kontos (für den Lagerbaum), inkl. Behälter-Code. */
+    public function treeForOwner(int $ownerId): array
+    {
+        $stmt = Database::app()->prepare(
+            'SELECT l.id, l.parent_id, l.name, l.kind, l.note, ll.code
+             FROM bb_location l
+             LEFT JOIN bb_location_label ll ON ll.location_id = l.id
+             WHERE l.owner_id = ?
+             ORDER BY l.name'
+        );
+        $stmt->execute([$ownerId]);
+        return $stmt->fetchAll();
+    }
+
+    /** Einfachen Ast (kein etikettierter Behälter) anlegen; gibt id zurück. */
+    public function createPlace(int $ownerId, ?int $parentId, string $name, string $kind, ?string $note): int
+    {
+        $db = Database::app();
+        $db->prepare(
+            'INSERT INTO bb_location (owner_id, parent_id, name, kind, note) VALUES (?,?,?,?,?)'
+        )->execute([$ownerId, $parentId, $name, $kind, $note]);
+        return (int) $db->lastInsertId();
+    }
+
+    /**
+     * Ast im Baum verschieben (frei, aber zyklensicher).
+     * $newParentId === null hängt den Ast direkt an den Konto-Root.
+     * @return array{ok:bool,message:string}
+     */
+    public function moveBranch(int $locationId, ?int $newParentId): array
+    {
+        if ($newParentId !== null) {
+            if ($newParentId === $locationId) {
+                return ['ok' => false, 'message' => 'Ein Ast kann nicht in sich selbst verschoben werden.'];
+            }
+            if (in_array($newParentId, $this->descendantIds($locationId), true)) {
+                return ['ok' => false, 'message' => 'Der Zielast liegt im eigenen Teilbaum.'];
+            }
+        }
+        Database::app()->prepare('UPDATE bb_location SET parent_id = ? WHERE id = ?')
+            ->execute([$newParentId, $locationId]);
+        return ['ok' => true, 'message' => 'Ast verschoben.'];
     }
 
     /** Alle Orte (für Auswahllisten). */
