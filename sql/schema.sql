@@ -28,7 +28,7 @@ CREATE TABLE bb_location (
   owner_id INT NULL,                  -- Konto (Wurzel des Baums), zu dem dieser Ast gehört
   name VARCHAR(120) NOT NULL,
   kind ENUM('raum','schrank','schublade','box','fach','sonstiges',
-            'container','karton','tuete') NOT NULL DEFAULT 'sonstiges',
+            'container','karton','tuete','sortimentsbox','einsatzkasten') NOT NULL DEFAULT 'sonstiges',
   note VARCHAR(255) NULL,
   managed_by_wcf_user_id INT NULL,   -- Lagerwart (WSC-Mitglied), optional
   KEY idx_location_parent (parent_id),
@@ -40,13 +40,15 @@ CREATE TABLE bb_location (
 CREATE TABLE bb_location_label (
   id INT AUTO_INCREMENT PRIMARY KEY,
   location_id INT NOT NULL,
-  code VARCHAR(16) NOT NULL,
+  code VARCHAR(16) NOT NULL,         -- automatische ID (z. B. EK-00012)
+  custom_code VARCHAR(32) NULL,      -- optionale eigene ID, parallel nutzbar
   code_seq INT NOT NULL,
   owner_id INT NULL,
   rfid_epc VARCHAR(64) NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY uq_label_location (location_id),
   UNIQUE KEY uq_label_code (code),
+  UNIQUE KEY uq_label_custom (custom_code),
   FOREIGN KEY (location_id) REFERENCES bb_location(id) ON DELETE CASCADE,
   FOREIGN KEY (owner_id) REFERENCES bb_owner(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

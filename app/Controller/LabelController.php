@@ -82,10 +82,11 @@ class LabelController extends Controller
 
         $out = fopen('php://output', 'w');
         fwrite($out, "\xEF\xBB\xBF"); // BOM für Excel/P-touch
-        fputcsv($out, ['code', 'titel', 'typ', 'standort', 'standort_code'], ';');
+        fputcsv($out, ['code', 'eigene_id', 'titel', 'typ', 'standort', 'standort_code'], ';');
         foreach ($labels as $l) {
             fputcsv($out, [
                 $l['code'],
+                $l['custom_code'] ?? '',
                 $l['name'],
                 $l['kind'],
                 $l['parent_name'] ?? '',

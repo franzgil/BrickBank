@@ -1,5 +1,6 @@
 <?php
-/** @var array $container @var array $contents @var \App\Integration\WcfUser|null $currentUser */
+/** @var array $container @var array $contents @var string $csrf
+ *  @var \App\Integration\WcfUser|null $currentUser */
 use App\Service\ContainerRules;
 ?>
 <div class="breadcrumbs">
@@ -19,6 +20,19 @@ use App\Service\ContainerRules;
         <td>
           <?php if (!empty($container['parent_code'])): ?><span class="codeTag"><?= e($container['parent_code']) ?></span> <?php endif; ?>
           <?= e($container['parent_name'] ?? '– kein Standort –') ?>
+        </td></tr>
+      <tr><th>Automatische ID</th><td><span class="codeTag"><?= e($container['code']) ?></span></td></tr>
+      <tr><th>Eigene ID</th>
+        <td>
+          <?php if ($currentUser !== null): ?>
+            <form method="post" action="<?= e(base_url('container/' . $container['id'] . '/custom-code')) ?>" style="display:flex;gap:6px;align-items:center">
+              <input type="hidden" name="csrf_token" value="<?= e($csrf) ?>">
+              <input type="text" name="custom_code" value="<?= e($container['custom_code'] ?? '') ?>" maxlength="32" placeholder="optional, parallel zur automatischen ID" style="max-width:260px">
+              <button type="submit" class="btn-ghost btn-sm">Speichern</button>
+            </form>
+          <?php else: ?>
+            <?= !empty($container['custom_code']) ? '<span class="codeTag">' . e($container['custom_code']) . '</span>' : '–' ?>
+          <?php endif; ?>
         </td></tr>
       <tr><th>Notiz</th><td><?= e($container['note'] ?? '–') ?></td></tr>
       <tr><th>RFID-EPC</th><td><?= e($container['rfid_epc'] ?? '–') ?></td></tr>

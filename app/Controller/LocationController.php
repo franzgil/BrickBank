@@ -8,6 +8,7 @@ use App\Model\Repository\LabelRepository;
 use App\Model\Repository\LocationRepository;
 use App\Model\Repository\OwnerRepository;
 use App\Service\CodeGenerator;
+use App\Service\ContainerRules;
 
 /**
  * Lagerbaum eines Kontos: Äste (Standorte/Behälter) anlegen und verschieben.
@@ -44,6 +45,8 @@ class LocationController extends Controller
         $name     = trim((string) $this->request->post('name', ''));
         $kind     = (string) $this->request->post('kind', 'sonstiges');
         $parentId = $this->nullableInt($this->request->post('parent_id'));
+        $count    = (int) $this->request->post('count', 1);
+        $count    = max(1, min(200, $count));
         $note     = trim((string) $this->request->post('note', ''));
         $note     = $note === '' ? null : $note;
 
@@ -60,12 +63,23 @@ class LocationController extends Controller
             }
         }
 
-        if (CodeGenerator::isContainerKind($kind)) {
-            $created = $this->labels->createContainer($kind, $name, $parentId, $accountId, $note);
-            $this->flash('success', 'Behälter angelegt: ' . $created['code']);
+        $isContainer = CodeGenerator::isContainerKind($kind);
+        $codes = [];
+        for ($i = 1; $i <= $count; $i++) {
+            $thisName = $count > 1 ? ($name . ' ' . $i) : $name;
+            if ($isContainer) {
+                $created = $this->labels->createContainer($kind, $thisName, $parentId, $accountId, $note);
+                $codes[] = $created['code'];
+            } else {
+                $this->locations->createPlace($accountId, $parentId, $thisName, $kind, $note);
+            }
+        }
+
+        if ($isContainer) {
+            $this->flash('success', $count . '× ' . ContainerRules::label($kind)
+                . ' angelegt (' . $codes[0] . ($count > 1 ? ' … ' . end($codes) : '') . ').');
         } else {
-            $this->locations->createPlace($accountId, $parentId, $name, $kind, $note);
-            $this->flash('success', 'Ast „' . $name . '" angelegt.');
+            $this->flash('success', $count . '× Ast „' . $name . '" angelegt.');
         }
         $this->redirect(base_url('account/' . $accountId));
     }

@@ -87,7 +87,7 @@ class LabelRepository
     {
         $stmt = Database::app()->prepare(
             'SELECT l.id, l.name, l.kind, l.parent_id, l.note,
-                    ll.code, ll.code_seq, ll.owner_id, ll.rfid_epc,
+                    ll.code, ll.custom_code, ll.code_seq, ll.owner_id, ll.rfid_epc,
                     p.name AS parent_name, p.kind AS parent_kind, pll.code AS parent_code
              FROM bb_location l
              JOIN bb_location_label ll ON ll.location_id = l.id
@@ -100,25 +100,38 @@ class LabelRepository
         return $row ?: null;
     }
 
-    /** Behälter per (ortsneutralem) Code finden. */
+    /** Behälter per Code finden – automatische ODER eigene ID. */
     public function findByCode(string $code): ?array
     {
         $stmt = Database::app()->prepare(
-            'SELECT l.id, l.name, l.kind, l.parent_id, ll.code, ll.owner_id
+            'SELECT l.id, l.name, l.kind, l.parent_id, ll.code, ll.custom_code, ll.owner_id
              FROM bb_location_label ll
              JOIN bb_location l ON l.id = ll.location_id
-             WHERE ll.code = ? LIMIT 1'
+             WHERE ll.code = ? OR ll.custom_code = ? LIMIT 1'
         );
-        $stmt->execute([$code]);
+        $stmt->execute([$code, $code]);
         $row = $stmt->fetch();
         return $row ?: null;
+    }
+
+    /** Setzt/löscht die eigene (parallele) ID eines Behälters. */
+    public function setCustomCode(int $locationId, ?string $custom): bool
+    {
+        $custom = ($custom === null || trim($custom) === '') ? null : trim($custom);
+        try {
+            Database::app()->prepare('UPDATE bb_location_label SET custom_code = ? WHERE location_id = ?')
+                ->execute([$custom, $locationId]);
+            return true;
+        } catch (\PDOException $e) {
+            return false; // bereits vergeben (UNIQUE)
+        }
     }
 
     /** Alle etikettierten Behälter (für Etikettenbogen/CSV). */
     public function allLabels(): array
     {
         return Database::app()->query(
-            'SELECT l.id, l.name, l.kind, ll.code,
+            'SELECT l.id, l.name, l.kind, ll.code, ll.custom_code,
                     p.name AS parent_name, pll.code AS parent_code
              FROM bb_location_label ll
              JOIN bb_location l      ON l.id = ll.location_id

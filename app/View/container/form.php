@@ -28,7 +28,7 @@ $val = function ($key, $default = '') use ($old) { return isset($old[$key]) ? $o
       <div class="formRow">
         <label for="kind">Typ</label>
         <select id="kind" name="kind">
-          <?php foreach (['container', 'karton', 'tuete'] as $k): ?>
+          <?php foreach (['container', 'karton', 'tuete', 'sortimentsbox', 'einsatzkasten'] as $k): ?>
             <option value="<?= e($k) ?>" <?= $val('kind') === $k ? 'selected' : '' ?>><?= e(ContainerRules::label($k)) ?></option>
           <?php endforeach; ?>
         </select>

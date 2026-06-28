@@ -11,9 +11,11 @@ class CodeGenerator
 {
     /** Behältertyp → Code-Präfix. */
     const PREFIXES = [
-        'container' => 'C-',
-        'karton'    => 'K-',
-        'tuete'     => 'T-',
+        'container'     => 'C-',
+        'karton'        => 'K-',
+        'tuete'         => 'T-',
+        'sortimentsbox' => 'SB-',
+        'einsatzkasten' => 'EK-',
     ];
 
     public static function isContainerKind(string $kind): bool

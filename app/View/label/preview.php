@@ -21,6 +21,7 @@ $h = (int) Config::get('labels.print.height_mm', 29);
              data-code="<?= e($label['code']) ?>" onerror="qrFallback(this)">
         <div class="labelMeta">
           <div class="lblCode"><?= e($label['code']) ?></div>
+          <?php if (!empty($label['custom_code'])): ?><div><?= e($label['custom_code']) ?></div><?php endif; ?>
           <div><?= e(ContainerRules::label($label['kind'])) ?></div>
           <div><?= e($label['name']) ?></div>
         </div>

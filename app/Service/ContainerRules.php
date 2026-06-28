@@ -48,7 +48,13 @@ class ContainerRules
     /** Lesbare Bezeichnung eines Behältertyps. */
     public static function label(string $kind): string
     {
-        $map = ['container' => 'Container', 'karton' => 'Karton', 'tuete' => 'Tüte'];
+        $map = [
+            'container'     => 'Container',
+            'karton'        => 'Karton',
+            'tuete'         => 'Tüte',
+            'sortimentsbox' => 'Sortimentsbox',
+            'einsatzkasten' => 'Einsatzkasten',
+        ];
         return $map[$kind] ?? $kind;
     }
 }

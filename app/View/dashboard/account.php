@@ -7,7 +7,7 @@ use App\Service\ContainerRules;
 $label  = $isMe ? 'Mein Bestand' : $owner['name'];
 $accId  = (int) $owner['id'];
 $placeKinds     = ['raum', 'schrank', 'schublade', 'box', 'fach', 'sonstiges'];
-$containerKinds = ['container', 'karton', 'tuete'];
+$containerKinds = ['container', 'karton', 'tuete', 'sortimentsbox', 'einsatzkasten'];
 
 if (!function_exists('bb_render_branches')) {
     function bb_render_branches(int $parentKey, array $byParent, array $summary, array $branches, int $accId, bool $canEdit, string $csrf, int $depth): void
@@ -109,10 +109,15 @@ if (!function_exists('bb_render_branches')) {
         </select>
       </div>
       <div class="formRow">
+        <label for="count">Anzahl</label>
+        <input type="number" id="count" name="count" min="1" max="200" value="1" style="max-width:120px">
+        <div class="hint">Mehrere auf einmal anlegen (z. B. 77 Einsatzkästen) – sie werden durchnummeriert.</div>
+      </div>
+      <div class="formRow">
         <label for="note">Notiz (optional)</label>
         <input type="text" id="note" name="note" maxlength="255">
       </div>
-      <button type="submit" class="btn btn-accent">Ast anlegen</button>
+      <button type="submit" class="btn btn-accent">Ast(e) anlegen</button>
     </form>
   </div>
 </article>

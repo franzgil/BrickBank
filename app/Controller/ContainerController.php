@@ -110,7 +110,20 @@ class ContainerController extends Controller
             'nav'       => 'container',
             'container' => $container,
             'contents'  => $this->holdings->contentsOfLocation((int) $id, $viewer ? $viewer->userId : null),
+            'csrf'      => Csrf::token(),
         ]);
+    }
+
+    /** Eigene (parallele) ID eines Behälters setzen/ändern. */
+    public function setCustomCode($id): void
+    {
+        $this->requireLogin();
+        Csrf::validate($this->request->post('csrf_token'));
+        $custom = (string) $this->request->post('custom_code', '');
+        $ok = $this->labels->setCustomCode((int) $id, $custom);
+        $this->flash($ok ? 'success' : 'error',
+            $ok ? 'Eigene ID gespeichert.' : 'Diese eigene ID ist bereits vergeben.');
+        $this->redirect(base_url('container/' . (int) $id));
     }
 
     /** Gemeinsame Daten für das Formular (inkl. evtl. Fehler/Alteingaben). */

@@ -56,9 +56,11 @@ return [
     'labels' => [
         // Stellenbreite der laufenden Nummer je Behältertyp.
         'code_widths' => [
-            'container' => 3,   // C-001
-            'karton'    => 5,   // K-00012
-            'tuete'     => 6,   // T-000345
+            'container'     => 3,   // C-001
+            'karton'        => 5,   // K-00012
+            'tuete'         => 6,   // T-000345
+            'sortimentsbox' => 3,   // SB-001
+            'einsatzkasten' => 5,   // EK-00012
         ],
         // Maße der Druck-Etiketten (mm) – z. B. Brother DK-Endlosrolle.
         'print' => [
