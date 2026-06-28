@@ -27,6 +27,10 @@ $defaultOwner = $container['owner_id'] ?? null;
     </form>
 
     <?php if (!empty($results)): ?>
+      <p class="hint">
+        <?= (int) $resultTotal ?> Treffer<?php if ($resultTotal > count($results)): ?>,
+          angezeigt die ersten <?= count($results) ?> — bitte Suche verfeinern.<?php endif; ?>
+      </p>
       <table>
         <thead><tr><th>Teil-Nr.</th><th>Name</th><th>Kategorie</th><th></th></tr></thead>
         <tbody>

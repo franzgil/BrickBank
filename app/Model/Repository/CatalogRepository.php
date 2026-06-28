@@ -11,9 +11,9 @@ use App\Core\Database;
 class CatalogRepository
 {
     /** Teile-Suche nach Teilenummer oder Name. */
-    public function searchParts(string $query, int $limit = 25): array
+    public function searchParts(string $query, int $limit = 200): array
     {
-        $limit = max(1, min(100, $limit));
+        $limit = max(1, min(1000, $limit));
         $like  = '%' . $query . '%';
         $stmt = Database::app()->prepare(
             'SELECT p.part_num, p.name, pc.name AS category
@@ -25,6 +25,18 @@ class CatalogRepository
         );
         $stmt->execute([$query, $like, $like, $query]);
         return $stmt->fetchAll();
+    }
+
+    /** Gesamtzahl der Treffer zu einer Teile-Suche (für die Anzeige). */
+    public function countParts(string $query): int
+    {
+        $like = '%' . $query . '%';
+        $stmt = Database::app()->prepare(
+            'SELECT COUNT(*) FROM rb_parts
+             WHERE part_num = ? OR part_num LIKE ? OR name LIKE ?'
+        );
+        $stmt->execute([$query, $like, $like]);
+        return (int) $stmt->fetchColumn();
     }
 
     /** Ein Teil samt Kategorie. */

@@ -45,16 +45,19 @@ class InventoryController extends Controller
         $q       = trim((string) $this->request->get('q', ''));
         $partNum = trim((string) $this->request->get('part', ''));
 
+        $limit = 200;
         $data = [
-            'title'     => 'Bestand erfassen · ' . $container['code'],
-            'nav'       => 'container',
-            'container' => $container,
-            'q'         => $q,
-            'results'   => [],
-            'part'      => null,
-            'colors'    => [],
-            'owners'    => $this->owners->all(),
-            'csrf'      => Csrf::token(),
+            'title'       => 'Bestand erfassen · ' . $container['code'],
+            'nav'         => 'container',
+            'container'   => $container,
+            'q'           => $q,
+            'results'     => [],
+            'resultTotal' => 0,
+            'resultLimit' => $limit,
+            'part'        => null,
+            'colors'      => [],
+            'owners'      => $this->owners->all(),
+            'csrf'        => Csrf::token(),
         ];
 
         if ($partNum !== '') {
@@ -67,7 +70,8 @@ class InventoryController extends Controller
                 $this->flash('error', 'Teil „' . $partNum . '" nicht im Katalog gefunden.');
             }
         } elseif ($q !== '') {
-            $data['results'] = $this->catalog->searchParts($q);
+            $data['results']     = $this->catalog->searchParts($q, $limit);
+            $data['resultTotal'] = $this->catalog->countParts($q);
         }
 
         $this->render('inventory/add', $data);
