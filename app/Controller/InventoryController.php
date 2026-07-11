@@ -168,7 +168,8 @@ class InventoryController extends Controller
         }
 
         $partNum    = trim((string) $this->request->post('part_num', ''));
-        $colorId    = (int) $this->request->post('color_id', 0);
+        $colorRaw   = $this->request->post('color_id', null);       // Präsenz prüfen (0 = Schwarz!)
+        $colorId    = (int) $colorRaw;
         $qty        = (int) $this->request->post('quantity', 0);
         $cond       = (string) $this->request->post('cond', 'gebraucht');
         $ownerScope = (string) $this->request->post('owner_scope', 'mein');   // mein|verein
@@ -180,7 +181,7 @@ class InventoryController extends Controller
         if ($partNum === '' || $this->catalog->findPart($partNum) === null) {
             $errors[] = 'Ungültiges Teil.';
         }
-        if ($colorId <= 0 || $this->catalog->color($colorId) === null) {
+        if ($colorRaw === null || $colorRaw === '' || $this->catalog->color($colorId) === null) {
             $errors[] = 'Ungültige Farbe.';
         }
         if ($qty < 1) {

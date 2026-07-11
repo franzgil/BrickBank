@@ -301,7 +301,9 @@ class ContainerController extends Controller
         $itemId     = (int) $this->request->post('item_id', 0);
         $ownerId    = (int) $this->request->post('owner_id', 0);
         $cond       = (string) $this->request->post('cond', 'gebraucht');
-        $newColorId = (int) $this->request->post('color_id', 0);
+        $colorRaw   = $this->request->post('color_id', null);       // Präsenz prüfen (0 = Schwarz!)
+        $hasColor   = ($colorRaw !== null && $colorRaw !== '');
+        $newColorId = (int) $colorRaw;
         $newCond    = (string) $this->request->post('new_cond', $cond);
         $qty        = (int) $this->request->post('quantity', 0);
         $back       = base_url('container/' . $locationId);
@@ -323,7 +325,7 @@ class ContainerController extends Controller
 
         // Zielfarbe bestimmen: nur für Elemente; sonst bleibt das Item gleich.
         $toItemId = $itemId;
-        if ($item['type'] === 'element' && $newColorId > 0 && $newColorId !== (int) $item['color_id']) {
+        if ($item['type'] === 'element' && $hasColor && $newColorId !== (int) $item['color_id']) {
             if ($this->catalog->color($newColorId) === null) {
                 $this->flash('error', 'Ungültige Farbe.');
                 $this->redirect($back);
