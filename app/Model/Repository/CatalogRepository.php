@@ -48,8 +48,13 @@ class CatalogRepository
     /**
      * Baut die WHERE-Bedingung für die Teile-Suche.
      * Jeder Suchbegriff (durch Leerzeichen getrennt) muss vorkommen –
-     * entweder in der Teilenummer oder im Namen, wobei beim Namen
-     * Leerzeichen ignoriert werden („2x4" matcht „2 x 4").
+     * entweder in der Teilenummer oder im Namen.
+     *
+     * - Reine Wort-Begriffe (nur Buchstaben, z. B. „Plate") matchen nur am
+     *   Wortanfang (Namensanfang oder nach einem Leerzeichen), damit „Plate"
+     *   NICHT „Baseplate" trifft.
+     * - Begriffe mit Ziffern/„x" (z. B. „2x4") matchen leerzeichentolerant
+     *   („2x4" trifft „2 x 4").
      *
      * @return array{0:string,1:array}
      */
@@ -63,11 +68,20 @@ class CatalogRepository
         $params  = [];
         foreach ($tokens as $t) {
             // LIKE-Sonderzeichen entschärfen.
-            $esc  = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $t);
-            $like = '%' . $esc . '%';
-            $clauses[] = "(p.part_num LIKE ? OR REPLACE(p.name, ' ', '') LIKE ?)";
-            $params[]  = $like;
-            $params[]  = $like;
+            $esc = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $t);
+            if (ctype_alpha($t)) {
+                // Wortanfang: Name beginnt mit dem Begriff oder er folgt einem Leerzeichen.
+                $clauses[] = '(p.part_num LIKE ? OR p.name LIKE ? OR p.name LIKE ?)';
+                $params[]  = '%' . $esc . '%';
+                $params[]  = $esc . '%';
+                $params[]  = '% ' . $esc . '%';
+            } else {
+                // Leerzeichentolerant (Maße wie „2x4").
+                $like = '%' . $esc . '%';
+                $clauses[] = "(p.part_num LIKE ? OR REPLACE(p.name, ' ', '') LIKE ?)";
+                $params[]  = $like;
+                $params[]  = $like;
+            }
         }
         return ['(' . implode(' AND ', $clauses) . ')', $params];
     }
