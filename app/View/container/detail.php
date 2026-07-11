@@ -124,7 +124,7 @@ use App\Service\ContainerRules;
     <?php else: ?>
       <?php $visLabels = ['privat' => 'privat', 'intern' => 'intern', 'verein' => 'für Verein']; ?>
       <table>
-        <thead><tr><th style="width:54px">Bild</th><th>Teil-Nr.</th><th>Teil</th><th>Farbe</th><th>Zustand</th><th>Menge</th><th>Besitzer</th><th>Sichtbarkeit</th><th>Bearbeiten</th></tr></thead>
+        <thead><tr><th style="width:54px">Bild</th><th>Teil-Nr.</th><th>Teil</th><th>Farbe</th><th>Zustand</th><th>Menge</th><th>Besitzer</th><th>Sichtbarkeit</th><th>Umbuchen / Löschen</th></tr></thead>
         <tbody>
           <?php foreach ($contents as $row): ?>
             <?php
@@ -132,12 +132,13 @@ use App\Service\ContainerRules;
               $mayEdit = ($meId !== null) && (!empty($canWrite)
                           || (int) ($row['owner_wcf_user_id'] ?? 0) === (int) $meId);
               $cid = (int) $container['id'];
-              $rcId = 'rc' . (int) $row['id'];   // Formular-ID für Farbe/Zustand-Änderung
+              $qty = (int) $row['quantity'];
               // gemeinsame versteckte Felder zur Identifikation der Position
               $hidden = '<input type="hidden" name="csrf_token" value="' . e($csrf) . '">'
                       . '<input type="hidden" name="item_id" value="' . (int) $row['item_id'] . '">'
                       . '<input type="hidden" name="owner_id" value="' . (int) $row['owner_id'] . '">'
                       . '<input type="hidden" name="cond" value="' . e($row['cond']) . '">';
+              $url = function ($a) use ($cid) { return e(base_url('container/' . $cid . '/stock/' . $a)); };
             ?>
             <tr>
               <td>
@@ -149,60 +150,76 @@ use App\Service\ContainerRules;
               </td>
               <td><?= e($row['part_num'] ?? '–') ?></td>
               <td><a href="<?= e(base_url('item/' . $row['item_id'])) ?>"><?= e($row['part_name'] ?? ('(' . $row['item_type'] . ')')) ?></a></td>
+
               <td>
                 <?php if ($mayEdit && $row['item_type'] === 'element'): ?>
-                  <select name="color_id" form="<?= e($rcId) ?>" style="max-width:150px">
-                    <?php foreach ($colors as $c): ?>
-                      <option value="<?= e($c['id']) ?>"<?= (int) $row['color_id'] === (int) $c['id'] ? ' selected' : '' ?>><?= e($c['name']) ?></option>
-                    <?php endforeach; ?>
-                  </select>
+                  <form method="post" action="<?= $url('reclassify') ?>" style="margin:0">
+                    <?= $hidden ?>
+                    <input type="hidden" name="new_cond" value="<?= e($row['cond']) ?>">
+                    <input type="hidden" name="quantity" value="<?= $qty ?>">
+                    <select name="color_id" style="max-width:150px" onchange="this.form.submit()">
+                      <?php foreach ($colors as $c): ?>
+                        <option value="<?= e($c['id']) ?>"<?= (int) $row['color_id'] === (int) $c['id'] ? ' selected' : '' ?>><?= e($c['name']) ?></option>
+                      <?php endforeach; ?>
+                    </select>
+                  </form>
                 <?php else: ?>
                   <?= e($row['color_name'] ?? '–') ?>
                 <?php endif; ?>
               </td>
+
               <td>
                 <?php if ($mayEdit): ?>
-                  <select name="new_cond" form="<?= e($rcId) ?>">
-                    <option value="gebraucht"<?= $row['cond'] === 'gebraucht' ? ' selected' : '' ?>>gebraucht</option>
-                    <option value="neu"<?= $row['cond'] === 'neu' ? ' selected' : '' ?>>neu</option>
-                  </select>
+                  <form method="post" action="<?= $url('reclassify') ?>" style="margin:0">
+                    <?= $hidden ?>
+                    <input type="hidden" name="quantity" value="<?= $qty ?>">
+                    <select name="new_cond" onchange="this.form.submit()">
+                      <option value="gebraucht"<?= $row['cond'] === 'gebraucht' ? ' selected' : '' ?>>gebraucht</option>
+                      <option value="neu"<?= $row['cond'] === 'neu' ? ' selected' : '' ?>>neu</option>
+                    </select>
+                  </form>
                 <?php else: ?>
                   <?= e($row['cond']) ?>
                 <?php endif; ?>
               </td>
-              <td><strong><?= e($row['quantity']) ?></strong></td>
-              <td><?= e($row['owner_name']) ?></td>
+
               <td>
                 <?php if ($mayEdit): ?>
-                  <form method="post" action="<?= e(base_url('container/' . $cid . '/stock/visibility')) ?>"
-                        style="display:flex;gap:4px;align-items:center">
+                  <form method="post" action="<?= $url('quantity') ?>" style="margin:0">
                     <?= $hidden ?>
-                    <select name="visibility" style="max-width:130px">
+                    <input type="number" name="quantity" min="0" value="<?= $qty ?>" style="width:80px"
+                           title="Menge direkt setzen (Enter oder Verlassen des Feldes)" onchange="this.form.submit()">
+                  </form>
+                <?php else: ?>
+                  <strong><?= e($row['quantity']) ?></strong>
+                <?php endif; ?>
+              </td>
+
+              <td><?= e($row['owner_name']) ?></td>
+
+              <td>
+                <?php if ($mayEdit): ?>
+                  <form method="post" action="<?= $url('visibility') ?>" style="margin:0">
+                    <?= $hidden ?>
+                    <select name="visibility" style="max-width:130px" onchange="this.form.submit()">
                       <?php foreach ($visLabels as $v => $vl): ?>
                         <option value="<?= e($v) ?>"<?= $row['visibility'] === $v ? ' selected' : '' ?>><?= e($vl) ?></option>
                       <?php endforeach; ?>
                     </select>
-                    <button type="submit" class="btn-ghost btn-sm" title="Sichtbarkeit speichern">✓</button>
                   </form>
                 <?php else: ?>
                   <?= e($row['visibility']) ?>
                 <?php endif; ?>
               </td>
+
               <td class="actions">
                 <?php if ($mayEdit): ?>
-                  <div style="display:flex;flex-direction:column;gap:6px">
-                    <form method="post" action="<?= e(base_url('container/' . $cid . '/stock/adjust')) ?>"
-                          style="display:flex;gap:4px;align-items:center">
-                      <?= $hidden ?>
-                      <input type="number" name="quantity" min="1" value="1" style="width:70px" title="Menge">
-                      <button type="submit" name="action" value="add" class="btn-ghost btn-sm" title="hinzufügen">＋</button>
-                      <button type="submit" name="action" value="remove" class="btn-ghost btn-sm" title="entnehmen">−</button>
-                    </form>
-                    <form method="post" action="<?= e(base_url('container/' . $cid . '/stock/move')) ?>"
-                          style="display:flex;gap:4px;align-items:center"
+                  <div style="display:flex;gap:4px;align-items:center">
+                    <form method="post" action="<?= $url('move') ?>"
+                          style="display:flex;gap:4px;align-items:center;margin:0"
                           onsubmit="return this.to_location_id.value !== '' || (alert('Bitte Zielort wählen.'), false)">
                       <?= $hidden ?>
-                      <input type="number" name="quantity" min="1" value="1" style="width:70px" title="Menge umbuchen">
+                      <input type="number" name="quantity" min="1" max="<?= $qty ?>" value="<?= $qty ?>" style="width:64px" title="Menge umbuchen">
                       <select name="to_location_id" style="max-width:150px">
                         <option value="">— Zielort —</option>
                         <?php foreach ($moveTargets as $t): ?>
@@ -212,14 +229,10 @@ use App\Service\ContainerRules;
                       </select>
                       <button type="submit" class="btn-ghost btn-sm" title="umbuchen">→</button>
                     </form>
-                    <form id="<?= e($rcId) ?>" method="post"
-                          action="<?= e(base_url('container/' . $cid . '/stock/reclassify')) ?>"
-                          style="display:flex;gap:4px;align-items:center">
+                    <form method="post" action="<?= $url('delete') ?>" style="margin:0"
+                          onsubmit="return confirm('Diese Position vollständig entfernen?')">
                       <?= $hidden ?>
-                      <input type="number" name="quantity" min="1" max="<?= (int) $row['quantity'] ?>"
-                             value="<?= (int) $row['quantity'] ?>" style="width:70px"
-                             title="Menge für Farb-/Zustandsänderung">
-                      <button type="submit" class="btn-ghost btn-sm" title="Farbe/Zustand speichern">Farbe/Zustand ✓</button>
+                      <button type="submit" class="btn-ghost btn-sm" title="Position löschen">🗑</button>
                     </form>
                   </div>
                 <?php else: ?>
@@ -230,9 +243,9 @@ use App\Service\ContainerRules;
           <?php endforeach; ?>
         </tbody>
       </table>
-      <p class="hint">Menge mit ＋/− korrigieren, per Zielort-Auswahl umbuchen (→), Farbe/Zustand
-         über die Auswahlfelder ändern und mit „Farbe/Zustand ✓" speichern, oder die Sichtbarkeit
-         anpassen. Entnimm die volle Menge, um eine Position aufzulösen.</p>
+      <p class="hint">Farbe, Zustand, Menge und Sichtbarkeit sind direkt editierbar – die Änderung
+         wird sofort gespeichert. Über die Zielort-Auswahl umbuchen (→) oder die Position mit 🗑
+         vollständig löschen. Menge auf 0 setzen entfernt die Position ebenfalls.</p>
     <?php endif; ?>
   </div>
 </article>

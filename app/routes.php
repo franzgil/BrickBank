@@ -46,6 +46,8 @@ $router->post('/container/{id}/stock/adjust', [ContainerController::class, 'adju
 $router->post('/container/{id}/stock/move', [ContainerController::class, 'moveStock']);
 $router->post('/container/{id}/stock/visibility', [ContainerController::class, 'setStockVisibility']);
 $router->post('/container/{id}/stock/reclassify', [ContainerController::class, 'reclassifyStock']);
+$router->post('/container/{id}/stock/quantity', [ContainerController::class, 'setStockQuantity']);
+$router->post('/container/{id}/stock/delete', [ContainerController::class, 'deleteStock']);
 
 // --- Umräumen ---
 $router->get('/move', [MoveController::class, 'form']);

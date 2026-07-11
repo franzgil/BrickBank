@@ -227,6 +227,71 @@ class ContainerController extends Controller
         $this->redirect(base_url('container/' . $locationId));
     }
 
+    /** Menge einer Bestandsposition direkt auf einen absoluten Wert setzen. */
+    public function setStockQuantity($id): void
+    {
+        $user = $this->requireLogin();
+        Csrf::validate($this->request->post('csrf_token'));
+        $locationId = (int) $id;
+        $itemId     = (int) $this->request->post('item_id', 0);
+        $ownerId    = (int) $this->request->post('owner_id', 0);
+        $cond       = (string) $this->request->post('cond', 'gebraucht');
+        $target     = (int) $this->request->post('quantity', -1);
+        $back       = base_url('container/' . $locationId);
+
+        if (!$this->mayEditOwner($ownerId, $user)) {
+            $this->flash('error', 'Keine Berechtigung für diese Position.');
+            $this->redirect($back);
+        }
+        if ($target < 0) {
+            $this->flash('error', 'Menge darf nicht negativ sein.');
+            $this->redirect($back);
+        }
+        $existing = $this->holdings->findExact($itemId, $locationId, $ownerId, $cond);
+        $current  = $existing ? (int) $existing['quantity'] : 0;
+        $delta    = $target - $current;
+        try {
+            if ($delta > 0) {
+                $visibility = $existing ? $existing['visibility'] : 'privat';
+                $this->stock->add($itemId, $locationId, $ownerId, $cond, $visibility, $delta, $user->userId, 'Menge gesetzt');
+            } elseif ($delta < 0) {
+                $this->stock->remove($itemId, $locationId, $ownerId, $cond, -$delta, $user->userId, 'Menge gesetzt');
+            }
+            $this->flash('success', 'Menge auf ' . $target . ' gesetzt.');
+        } catch (\Throwable $e) {
+            $this->flash('error', $e->getMessage());
+        }
+        $this->redirect($back);
+    }
+
+    /** Eine Bestandsposition vollständig aus dem Behälter entfernen. */
+    public function deleteStock($id): void
+    {
+        $user = $this->requireLogin();
+        Csrf::validate($this->request->post('csrf_token'));
+        $locationId = (int) $id;
+        $itemId     = (int) $this->request->post('item_id', 0);
+        $ownerId    = (int) $this->request->post('owner_id', 0);
+        $cond       = (string) $this->request->post('cond', 'gebraucht');
+        $back       = base_url('container/' . $locationId);
+
+        if (!$this->mayEditOwner($ownerId, $user)) {
+            $this->flash('error', 'Keine Berechtigung für diese Position.');
+            $this->redirect($back);
+        }
+        $existing = $this->holdings->findExact($itemId, $locationId, $ownerId, $cond);
+        if ($existing !== null && (int) $existing['quantity'] > 0) {
+            try {
+                $this->stock->remove($itemId, $locationId, $ownerId, $cond, (int) $existing['quantity'], $user->userId, 'Position gelöscht');
+            } catch (\Throwable $e) {
+                $this->flash('error', $e->getMessage());
+                $this->redirect($back);
+            }
+        }
+        $this->flash('success', 'Position entfernt.');
+        $this->redirect($back);
+    }
+
     /** Farbe und/oder Zustand einer Bestandsposition im Behälter ändern. */
     public function reclassifyStock($id): void
     {

@@ -74,7 +74,7 @@ class HoldingRepository
              JOIN bb_owner o ON o.id = h.owner_id
              LEFT JOIN rb_parts  rp ON i.type = 'element' AND rp.part_num = i.part_num
              LEFT JOIN rb_colors rc ON i.type = 'element' AND rc.id = i.color_id
-             WHERE h.location_id = ? AND " . $this->visClause() . "
+             WHERE h.location_id = ? AND h.quantity > 0 AND " . $this->visClause() . "
              ORDER BY rp.name, rc.name, h.cond"
         );
         $stmt->execute([$locationId, $viewer]);
