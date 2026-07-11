@@ -52,6 +52,14 @@ return [
         'allowed_group_ids' => [],
     ],
 
+    // Teilesuche.
+    'search' => [
+        // Kategorien, die in der Teilesuche standardmäßig ausgeblendet werden
+        // (Teil-Zeichenketten, case-insensitiv gegen den Kategorienamen).
+        // Im Suchformular pro Suche wieder aktivierbar.
+        'exclude_categories' => ['Duplo', 'Modulex'],
+    ],
+
     // Etiketten-/Code-Konfiguration (Modul Behälter/Inventur).
     'labels' => [
         // Stellenbreite der laufenden Nummer je Behältertyp.

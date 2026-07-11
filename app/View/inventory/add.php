@@ -17,20 +17,55 @@ use App\Service\ContainerRules;
     <?php if (!empty($container['code'])): ?><span class="codeTag"><?= e($container['code']) ?></span>&nbsp;<?php endif; ?><?= e(ContainerRules::label($container['kind'])) ?> · <?= e($container['name']) ?>
   </div>
   <div class="contentBoxBody">
+    <?php $excluded = array_map('intval', $excludedCatIds); $hiddenCats = count($excluded); ?>
     <form method="get" action="<?= e(base_url('container/' . $container['id'] . '/add')) ?>">
+      <input type="hidden" name="catform" value="1">
       <div class="formRow">
         <label for="q">Teil suchen (Teilenummer oder Name)</label>
         <input type="search" id="q" name="q" value="<?= e($q) ?>" placeholder="z. B. 3001 oder „Brick 2 x 4"" autofocus>
       </div>
+
+      <details style="margin:6px 0 10px">
+        <summary style="cursor:pointer">Kategorien
+          <?php if ($hiddenCats > 0): ?><span class="pill pill-warn" style="margin-left:6px"><?= $hiddenCats ?> ausgeblendet</span><?php endif; ?>
+        </summary>
+        <div style="margin-top:8px">
+          <p class="hint">Angehakte Kategorien werden durchsucht. Standardmäßig sind einige
+             Kategorien (z. B. Duplo, Modulex) ausgeblendet – hier wieder aktivierbar.</p>
+          <p style="margin:6px 0">
+            <button type="button" class="btn-ghost btn-sm" onclick="brickbankToggleCats(this.form,true)">Alle auswählen</button>
+            <button type="button" class="btn-ghost btn-sm" onclick="brickbankToggleCats(this.form,false)">Keine</button>
+          </p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:2px 14px">
+            <?php foreach ($categories as $c): ?>
+              <?php $cid = (int) $c['id']; ?>
+              <label style="display:flex;gap:6px;align-items:center;font-weight:normal">
+                <input type="checkbox" name="cat[]" value="<?= $cid ?>" class="bbCat"<?= in_array($cid, $excluded, true) ? '' : ' checked' ?>>
+                <?= e($c['name']) ?>
+              </label>
+            <?php endforeach; ?>
+          </div>
+        </div>
+      </details>
+
       <button type="submit" class="btn">Suchen</button>
     </form>
+    <script>
+    function brickbankToggleCats(form, on) {
+      form.querySelectorAll('.bbCat').forEach(function (cb) { cb.checked = on; });
+    }
+    </script>
 
     <?php if (!empty($results)): ?>
       <?php
         $addBase  = base_url('container/' . $container['id'] . '/add');
         $lastPage = (int) max(1, ceil($resultTotal / $resultLimit));
-        $pageUrl  = function ($p) use ($addBase, $q) {
-            return $addBase . '?q=' . urlencode($q) . '&page=' . (int) $p;
+        $pageUrl  = function ($p) use ($addBase, $q, $excludedCatIds) {
+            $url = $addBase . '?q=' . urlencode($q) . '&page=' . (int) $p . '&cf=1';
+            foreach ($excludedCatIds as $xid) {
+                $url .= '&xcat%5B%5D=' . (int) $xid;   // ausgeblendete Kategorien mitführen
+            }
+            return $url;
         };
       ?>
       <p class="hint">

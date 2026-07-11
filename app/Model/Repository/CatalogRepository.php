@@ -15,11 +15,12 @@ class CatalogRepository
      * $offset erlaubt seitenweises Blättern (z. B. die nächsten 200).
      * Liefert je Teil eine repräsentative element_id (für ein Vorschaubild).
      */
-    public function searchParts(string $query, int $limit = 200, int $offset = 0): array
+    public function searchParts(string $query, int $limit = 200, int $offset = 0, array $excludeCatIds = []): array
     {
         $limit  = max(1, min(1000, $limit));
         $offset = max(0, $offset);
         list($where, $params) = $this->buildSearch($query);
+        $where .= $this->categoryExclusion($excludeCatIds, $params);
 
         $params[] = trim($query); // für die Sortierung (exakte Teilenummer zuerst)
         $sql = 'SELECT p.part_num, p.name, pc.name AS category,
@@ -37,12 +38,39 @@ class CatalogRepository
     }
 
     /** Gesamtzahl der Treffer zu einer Teile-Suche (für die Anzeige). */
-    public function countParts(string $query): int
+    public function countParts(string $query, array $excludeCatIds = []): int
     {
         list($where, $params) = $this->buildSearch($query);
+        $where .= $this->categoryExclusion($excludeCatIds, $params);
         $stmt = Database::app()->prepare('SELECT COUNT(*) FROM rb_parts p WHERE ' . $where);
         $stmt->execute($params);
         return (int) $stmt->fetchColumn();
+    }
+
+    /** Alle Teilekategorien (id, name) für den Kategorie-Filter. */
+    public function categories(): array
+    {
+        return Database::app()
+            ->query('SELECT id, name FROM rb_part_categories ORDER BY name')
+            ->fetchAll();
+    }
+
+    /**
+     * Baut die Kategorie-Ausschluss-Bedingung und hängt die Parameter an.
+     * Teile ohne Kategorie bleiben sichtbar. Gibt das SQL-Fragment zurück
+     * (mit führendem AND) oder '' bei leerem Ausschluss.
+     */
+    private function categoryExclusion(array $excludeCatIds, array &$params): string
+    {
+        $ids = array_values(array_unique(array_map('intval', $excludeCatIds)));
+        if (empty($ids)) {
+            return '';
+        }
+        $ph = implode(',', array_fill(0, count($ids), '?'));
+        foreach ($ids as $cid) {
+            $params[] = $cid;
+        }
+        return ' AND (p.part_cat_id IS NULL OR p.part_cat_id NOT IN (' . $ph . '))';
     }
 
     /**
