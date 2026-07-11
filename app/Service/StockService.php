@@ -82,6 +82,36 @@ class StockService
         }
     }
 
+    /**
+     * Umklassifizierung am selben Ort: Menge von einer Position (Item/Zustand)
+     * auf eine andere (andere Farbe → anderes Item und/oder anderer Zustand)
+     * umbuchen. Wird als zwei 'korrektur'-Bewegungen protokolliert.
+     */
+    public function reclassify(int $fromItemId, int $toItemId, int $locationId, int $ownerId, string $fromCond, string $toCond, int $qty, ?int $wcfUserId, ?string $note): void
+    {
+        $this->assertQty($qty);
+        if ($fromItemId === $toItemId && $fromCond === $toCond) {
+            throw new \RuntimeException('Farbe und Zustand sind unverändert.');
+        }
+        $from = $this->holdings->findExact($fromItemId, $locationId, $ownerId, $fromCond);
+        if ($from === null || (int) $from['quantity'] < $qty) {
+            throw new \RuntimeException('Nicht genug Bestand für die Änderung.');
+        }
+        $visibility = $from['visibility'];
+        $db = Database::app();
+        $db->beginTransaction();
+        try {
+            $this->holdings->applyDelta($fromItemId, $locationId, $ownerId, $fromCond, $visibility, -$qty);
+            $this->holdings->applyDelta($toItemId, $locationId, $ownerId, $toCond, $visibility, $qty);
+            $this->movements->log($fromItemId, $ownerId, $fromCond, $locationId, null, $qty, 'korrektur', $wcfUserId, $note);
+            $this->movements->log($toItemId, $ownerId, $toCond, null, $locationId, $qty, 'korrektur', $wcfUserId, $note);
+            $db->commit();
+        } catch (\Throwable $e) {
+            $db->rollBack();
+            throw $e;
+        }
+    }
+
     private function assertQty(int $qty): void
     {
         if ($qty < 1) {

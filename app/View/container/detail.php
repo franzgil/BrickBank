@@ -132,6 +132,7 @@ use App\Service\ContainerRules;
               $mayEdit = ($meId !== null) && (!empty($canWrite)
                           || (int) ($row['owner_wcf_user_id'] ?? 0) === (int) $meId);
               $cid = (int) $container['id'];
+              $rcId = 'rc' . (int) $row['id'];   // Formular-ID für Farbe/Zustand-Änderung
               // gemeinsame versteckte Felder zur Identifikation der Position
               $hidden = '<input type="hidden" name="csrf_token" value="' . e($csrf) . '">'
                       . '<input type="hidden" name="item_id" value="' . (int) $row['item_id'] . '">'
@@ -148,8 +149,27 @@ use App\Service\ContainerRules;
               </td>
               <td><?= e($row['part_num'] ?? '–') ?></td>
               <td><a href="<?= e(base_url('item/' . $row['item_id'])) ?>"><?= e($row['part_name'] ?? ('(' . $row['item_type'] . ')')) ?></a></td>
-              <td><?= e($row['color_name'] ?? '–') ?></td>
-              <td><?= e($row['cond']) ?></td>
+              <td>
+                <?php if ($mayEdit && $row['item_type'] === 'element'): ?>
+                  <select name="color_id" form="<?= e($rcId) ?>" style="max-width:150px">
+                    <?php foreach ($colors as $c): ?>
+                      <option value="<?= e($c['id']) ?>"<?= (int) $row['color_id'] === (int) $c['id'] ? ' selected' : '' ?>><?= e($c['name']) ?></option>
+                    <?php endforeach; ?>
+                  </select>
+                <?php else: ?>
+                  <?= e($row['color_name'] ?? '–') ?>
+                <?php endif; ?>
+              </td>
+              <td>
+                <?php if ($mayEdit): ?>
+                  <select name="new_cond" form="<?= e($rcId) ?>">
+                    <option value="gebraucht"<?= $row['cond'] === 'gebraucht' ? ' selected' : '' ?>>gebraucht</option>
+                    <option value="neu"<?= $row['cond'] === 'neu' ? ' selected' : '' ?>>neu</option>
+                  </select>
+                <?php else: ?>
+                  <?= e($row['cond']) ?>
+                <?php endif; ?>
+              </td>
               <td><strong><?= e($row['quantity']) ?></strong></td>
               <td><?= e($row['owner_name']) ?></td>
               <td>
@@ -192,6 +212,15 @@ use App\Service\ContainerRules;
                       </select>
                       <button type="submit" class="btn-ghost btn-sm" title="umbuchen">→</button>
                     </form>
+                    <form id="<?= e($rcId) ?>" method="post"
+                          action="<?= e(base_url('container/' . $cid . '/stock/reclassify')) ?>"
+                          style="display:flex;gap:4px;align-items:center">
+                      <?= $hidden ?>
+                      <input type="number" name="quantity" min="1" max="<?= (int) $row['quantity'] ?>"
+                             value="<?= (int) $row['quantity'] ?>" style="width:70px"
+                             title="Menge für Farb-/Zustandsänderung">
+                      <button type="submit" class="btn-ghost btn-sm" title="Farbe/Zustand speichern">Farbe/Zustand ✓</button>
+                    </form>
                   </div>
                 <?php else: ?>
                   <span class="hint">—</span>
@@ -201,8 +230,9 @@ use App\Service\ContainerRules;
           <?php endforeach; ?>
         </tbody>
       </table>
-      <p class="hint">Menge mit ＋/− korrigieren, per Zielort-Auswahl umbuchen (→) oder die
-         Sichtbarkeit ändern. Entnimm die volle Menge, um eine Position aufzulösen.</p>
+      <p class="hint">Menge mit ＋/− korrigieren, per Zielort-Auswahl umbuchen (→), Farbe/Zustand
+         über die Auswahlfelder ändern und mit „Farbe/Zustand ✓" speichern, oder die Sichtbarkeit
+         anpassen. Entnimm die volle Menge, um eine Position aufzulösen.</p>
     <?php endif; ?>
   </div>
 </article>

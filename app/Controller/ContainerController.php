@@ -4,7 +4,9 @@ namespace App\Controller;
 use App\Core\Controller;
 use App\Core\Csrf;
 use App\Integration\WcfSession;
+use App\Model\Repository\CatalogRepository;
 use App\Model\Repository\HoldingRepository;
+use App\Model\Repository\ItemRepository;
 use App\Model\Repository\LabelRepository;
 use App\Model\Repository\LocationRepository;
 use App\Model\Repository\OwnerRepository;
@@ -24,6 +26,10 @@ class ContainerController extends Controller
     private $holdings;
     /** @var StockService */
     private $stock;
+    /** @var ItemRepository */
+    private $items;
+    /** @var CatalogRepository */
+    private $catalog;
 
     public function __construct()
     {
@@ -33,6 +39,8 @@ class ContainerController extends Controller
         $this->owners    = new OwnerRepository();
         $this->holdings  = new HoldingRepository();
         $this->stock     = new StockService();
+        $this->items     = new ItemRepository();
+        $this->catalog   = new CatalogRepository();
     }
 
     /** Liste aller Behälter, optional auf einen Typ gefiltert (?kind=). */
@@ -119,6 +127,7 @@ class ContainerController extends Controller
                 ['raum', 'schrank', 'schublade', 'box', 'fach', 'sonstiges',
                  'container', 'karton', 'tuete', 'sortimentsbox', 'einsatzkasten']
             ),
+            'colors'      => $this->catalog->colors(),
             'meId'        => $viewer ? $viewer->userId : null,
             'canWrite'    => $viewer ? $viewer->canWrite() : false,
             'csrf'        => Csrf::token(),
@@ -216,6 +225,59 @@ class ContainerController extends Controller
             $this->flash('success', 'Sichtbarkeit geändert.');
         }
         $this->redirect(base_url('container/' . $locationId));
+    }
+
+    /** Farbe und/oder Zustand einer Bestandsposition im Behälter ändern. */
+    public function reclassifyStock($id): void
+    {
+        $user = $this->requireLogin();
+        Csrf::validate($this->request->post('csrf_token'));
+        $locationId = (int) $id;
+        $itemId     = (int) $this->request->post('item_id', 0);
+        $ownerId    = (int) $this->request->post('owner_id', 0);
+        $cond       = (string) $this->request->post('cond', 'gebraucht');
+        $newColorId = (int) $this->request->post('color_id', 0);
+        $newCond    = (string) $this->request->post('new_cond', $cond);
+        $qty        = (int) $this->request->post('quantity', 0);
+        $back       = base_url('container/' . $locationId);
+
+        if (!$this->mayEditOwner($ownerId, $user)) {
+            $this->flash('error', 'Keine Berechtigung für diese Position.');
+            $this->redirect($back);
+        }
+        if (!in_array($newCond, ['neu', 'gebraucht'], true)) {
+            $this->flash('error', 'Ungültiger Zustand.');
+            $this->redirect($back);
+        }
+
+        $item = $this->items->find($itemId);
+        if ($item === null) {
+            $this->flash('error', 'Position nicht gefunden.');
+            $this->redirect($back);
+        }
+
+        // Zielfarbe bestimmen: nur für Elemente; sonst bleibt das Item gleich.
+        $toItemId = $itemId;
+        if ($item['type'] === 'element' && $newColorId > 0 && $newColorId !== (int) $item['color_id']) {
+            if ($this->catalog->color($newColorId) === null) {
+                $this->flash('error', 'Ungültige Farbe.');
+                $this->redirect($back);
+            }
+            $toItemId = $this->items->findOrCreateElement($item['part_num'], $newColorId);
+        }
+
+        if ($toItemId === $itemId && $newCond === $cond) {
+            $this->flash('info', 'Farbe und Zustand sind unverändert.');
+            $this->redirect($back);
+        }
+
+        try {
+            $this->stock->reclassify($itemId, $toItemId, $locationId, $ownerId, $cond, $newCond, $qty, $user->userId, 'Farbe/Zustand geändert');
+            $this->flash('success', $qty . '× angepasst (Farbe/Zustand).');
+        } catch (\Throwable $e) {
+            $this->flash('error', $e->getMessage());
+        }
+        $this->redirect($back);
     }
 
     /** Darf der Benutzer die Position dieses Besitzers bearbeiten? */

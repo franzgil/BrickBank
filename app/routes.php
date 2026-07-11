@@ -45,6 +45,7 @@ $router->post('/container/{id}/inventory', [InventoryController::class, 'store']
 $router->post('/container/{id}/stock/adjust', [ContainerController::class, 'adjustStock']);
 $router->post('/container/{id}/stock/move', [ContainerController::class, 'moveStock']);
 $router->post('/container/{id}/stock/visibility', [ContainerController::class, 'setStockVisibility']);
+$router->post('/container/{id}/stock/reclassify', [ContainerController::class, 'reclassifyStock']);
 
 // --- Umräumen ---
 $router->get('/move', [MoveController::class, 'form']);
