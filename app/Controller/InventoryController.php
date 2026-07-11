@@ -123,7 +123,10 @@ class InventoryController extends Controller
         } elseif ($this->request->get('cf') !== null) {
             $excluded = array_map('intval', (array) ($this->request->get('xcat') ?? []));
         } else {
-            $needles = Config::get('search.exclude_categories', ['Duplo', 'Modulex']);
+            $needles = Config::get('search.exclude_categories', [
+                'Duplo', 'Modulex', 'Belville', 'Clikits', 'HO Scale',
+                'Non-Buildable Figures', 'Znap',
+            ]);
             $excluded = [];
             foreach ($categories as $c) {
                 foreach ($needles as $n) {

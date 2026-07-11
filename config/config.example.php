@@ -57,7 +57,15 @@ return [
         // Kategorien, die in der Teilesuche standardmäßig ausgeblendet werden
         // (Teil-Zeichenketten, case-insensitiv gegen den Kategorienamen).
         // Im Suchformular pro Suche wieder aktivierbar.
-        'exclude_categories' => ['Duplo', 'Modulex'],
+        'exclude_categories' => [
+            'Duplo',                  // „Duplo, Quatro and Primo"
+            'Modulex',
+            'Belville',               // „Belville, Scala and Fabuland"
+            'Clikits',
+            'HO Scale',
+            'Non-Buildable Figures',  // „Non-Buildable Figures (Duplo, Fabuland, etc)"
+            'Znap',
+        ],
     ],
 
     // Etiketten-/Code-Konfiguration (Modul Behälter/Inventur).
