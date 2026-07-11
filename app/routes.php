@@ -42,6 +42,9 @@ $router->post('/container/{id}/image', [ContainerController::class, 'uploadImage
 $router->post('/container/{id}/image/remove', [ContainerController::class, 'removeImage']);
 $router->get('/container/{id}/add', [InventoryController::class, 'add']);
 $router->post('/container/{id}/inventory', [InventoryController::class, 'store']);
+$router->post('/container/{id}/stock/adjust', [ContainerController::class, 'adjustStock']);
+$router->post('/container/{id}/stock/move', [ContainerController::class, 'moveStock']);
+$router->post('/container/{id}/stock/visibility', [ContainerController::class, 'setStockVisibility']);
 
 // --- Umräumen ---
 $router->get('/move', [MoveController::class, 'form']);

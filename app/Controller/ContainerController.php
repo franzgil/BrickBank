@@ -10,6 +10,7 @@ use App\Model\Repository\LocationRepository;
 use App\Model\Repository\OwnerRepository;
 use App\Service\CodeGenerator;
 use App\Service\ContainerRules;
+use App\Service\StockService;
 
 class ContainerController extends Controller
 {
@@ -21,6 +22,8 @@ class ContainerController extends Controller
     private $owners;
     /** @var HoldingRepository */
     private $holdings;
+    /** @var StockService */
+    private $stock;
 
     public function __construct()
     {
@@ -29,6 +32,7 @@ class ContainerController extends Controller
         $this->locations = new LocationRepository();
         $this->owners    = new OwnerRepository();
         $this->holdings  = new HoldingRepository();
+        $this->stock     = new StockService();
     }
 
     /** Liste aller Behälter, optional auf einen Typ gefiltert (?kind=). */
@@ -106,13 +110,125 @@ class ContainerController extends Controller
         }
         $viewer = WcfSession::user();
         $this->render('container/detail', [
-            'title'     => $container['code'] ?? $container['name'],
-            'nav'       => 'container',
-            'container' => $container,
-            'children'  => $this->locations->childrenOf((int) $id),
-            'contents'  => $this->holdings->contentsOfLocation((int) $id, $viewer ? $viewer->userId : null),
-            'csrf'      => Csrf::token(),
+            'title'       => $container['code'] ?? $container['name'],
+            'nav'         => 'container',
+            'container'   => $container,
+            'children'    => $this->locations->childrenOf((int) $id),
+            'contents'    => $this->holdings->contentsOfLocation((int) $id, $viewer ? $viewer->userId : null),
+            'moveTargets' => $this->locations->byKinds(
+                ['raum', 'schrank', 'schublade', 'box', 'fach', 'sonstiges',
+                 'container', 'karton', 'tuete', 'sortimentsbox', 'einsatzkasten']
+            ),
+            'meId'        => $viewer ? $viewer->userId : null,
+            'canWrite'    => $viewer ? $viewer->canWrite() : false,
+            'csrf'        => Csrf::token(),
         ]);
+    }
+
+    /** Menge einer Bestandsposition im Behälter korrigieren (add|remove). */
+    public function adjustStock($id): void
+    {
+        $user = $this->requireLogin();
+        Csrf::validate($this->request->post('csrf_token'));
+        $locationId = (int) $id;
+        $itemId     = (int) $this->request->post('item_id', 0);
+        $ownerId    = (int) $this->request->post('owner_id', 0);
+        $cond       = (string) $this->request->post('cond', 'gebraucht');
+        $qty        = (int) $this->request->post('quantity', 0);
+        $action     = (string) $this->request->post('action', '');   // add|remove
+
+        if (!$this->mayEditOwner($ownerId, $user)) {
+            $this->flash('error', 'Keine Berechtigung für diese Position.');
+            $this->redirect(base_url('container/' . $locationId));
+        }
+        try {
+            if ($action === 'add') {
+                $existing   = $this->holdings->findExact($itemId, $locationId, $ownerId, $cond);
+                $visibility = $existing ? $existing['visibility'] : 'privat';
+                $this->stock->add($itemId, $locationId, $ownerId, $cond, $visibility, $qty, $user->userId, null);
+                $this->flash('success', $qty . '× hinzugefügt.');
+            } else {
+                $this->stock->remove($itemId, $locationId, $ownerId, $cond, $qty, $user->userId, null);
+                $this->flash('success', $qty . '× entnommen.');
+            }
+        } catch (\Throwable $e) {
+            $this->flash('error', $e->getMessage());
+        }
+        $this->redirect(base_url('container/' . $locationId));
+    }
+
+    /** Bestandsposition aus diesem Behälter an einen anderen Ort umbuchen. */
+    public function moveStock($id): void
+    {
+        $user = $this->requireLogin();
+        Csrf::validate($this->request->post('csrf_token'));
+        $fromLocationId = (int) $id;
+        $toLocationId   = (int) $this->request->post('to_location_id', 0);
+        $itemId         = (int) $this->request->post('item_id', 0);
+        $ownerId        = (int) $this->request->post('owner_id', 0);
+        $cond           = (string) $this->request->post('cond', 'gebraucht');
+        $qty            = (int) $this->request->post('quantity', 0);
+
+        if (!$this->mayEditOwner($ownerId, $user)) {
+            $this->flash('error', 'Keine Berechtigung für diese Position.');
+            $this->redirect(base_url('container/' . $fromLocationId));
+        }
+        if ($toLocationId <= 0) {
+            $this->flash('error', 'Bitte einen Zielort wählen.');
+            $this->redirect(base_url('container/' . $fromLocationId));
+        }
+        try {
+            $this->stock->move($itemId, $fromLocationId, $toLocationId, $ownerId, $cond, $qty, $user->userId, null);
+            $this->flash('success', $qty . '× umgebucht.');
+        } catch (\Throwable $e) {
+            $this->flash('error', $e->getMessage());
+        }
+        $this->redirect(base_url('container/' . $fromLocationId));
+    }
+
+    /** Sichtbarkeit einer Bestandsposition im Behälter ändern. */
+    public function setStockVisibility($id): void
+    {
+        $user = $this->requireLogin();
+        Csrf::validate($this->request->post('csrf_token'));
+        $locationId = (int) $id;
+        $itemId     = (int) $this->request->post('item_id', 0);
+        $ownerId    = (int) $this->request->post('owner_id', 0);
+        $cond       = (string) $this->request->post('cond', 'gebraucht');
+        $visibility = (string) $this->request->post('visibility', '');
+
+        if (!in_array($visibility, ['privat', 'intern', 'verein'], true)) {
+            $this->flash('error', 'Ungültige Sichtbarkeit.');
+            $this->redirect(base_url('container/' . $locationId));
+        }
+        $owner = $this->owners->find($ownerId);
+        if ($owner === null || !$this->mayEditOwner($ownerId, $user)) {
+            $this->flash('error', 'Keine Berechtigung für diese Position.');
+            $this->redirect(base_url('container/' . $locationId));
+        }
+        // Vereinsbestand ist mindestens intern sichtbar.
+        if ($owner['type'] === 'verein' && $visibility === 'privat') {
+            $visibility = 'intern';
+        }
+        $holding = $this->holdings->findExact($itemId, $locationId, $ownerId, $cond);
+        if ($holding !== null) {
+            $this->holdings->setVisibility((int) $holding['id'], $visibility);
+            $this->flash('success', 'Sichtbarkeit geändert.');
+        }
+        $this->redirect(base_url('container/' . $locationId));
+    }
+
+    /** Darf der Benutzer die Position dieses Besitzers bearbeiten? */
+    private function mayEditOwner(int $ownerId, \App\Integration\WcfUser $user): bool
+    {
+        $owner = $this->owners->find($ownerId);
+        if ($owner === null) {
+            return false;
+        }
+        if ($owner['type'] === 'verein') {
+            return $user->canWrite();
+        }
+        return ((int) $owner['wcf_user_id'] === $user->userId) || $user->canWrite();
     }
 
     /** Behälter (Ast) löschen – nur wenn leer. */

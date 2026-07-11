@@ -122,11 +122,22 @@ use App\Service\ContainerRules;
     <?php if (empty($contents)): ?>
       <p>Für diesen Behälter sind noch keine Bestandsposten erfasst.</p>
     <?php else: ?>
+      <?php $visLabels = ['privat' => 'privat', 'intern' => 'intern', 'verein' => 'für Verein']; ?>
       <table>
-        <thead><tr><th style="width:54px">Bild</th><th>Teil-Nr.</th><th>Teil</th><th>Farbe</th><th>Zustand</th><th>Menge</th><th>Besitzer</th><th>Sichtbarkeit</th></tr></thead>
+        <thead><tr><th style="width:54px">Bild</th><th>Teil-Nr.</th><th>Teil</th><th>Farbe</th><th>Zustand</th><th>Menge</th><th>Besitzer</th><th>Sichtbarkeit</th><th>Bearbeiten</th></tr></thead>
         <tbody>
           <?php foreach ($contents as $row): ?>
-            <?php $img = part_image_url($row['element_id'] ?? null); ?>
+            <?php
+              $img = part_image_url($row['element_id'] ?? null);
+              $mayEdit = ($meId !== null) && (!empty($canWrite)
+                          || (int) ($row['owner_wcf_user_id'] ?? 0) === (int) $meId);
+              $cid = (int) $container['id'];
+              // gemeinsame versteckte Felder zur Identifikation der Position
+              $hidden = '<input type="hidden" name="csrf_token" value="' . e($csrf) . '">'
+                      . '<input type="hidden" name="item_id" value="' . (int) $row['item_id'] . '">'
+                      . '<input type="hidden" name="owner_id" value="' . (int) $row['owner_id'] . '">'
+                      . '<input type="hidden" name="cond" value="' . e($row['cond']) . '">';
+            ?>
             <tr>
               <td>
                 <?php if ($img !== null): ?>
@@ -139,13 +150,59 @@ use App\Service\ContainerRules;
               <td><a href="<?= e(base_url('item/' . $row['item_id'])) ?>"><?= e($row['part_name'] ?? ('(' . $row['item_type'] . ')')) ?></a></td>
               <td><?= e($row['color_name'] ?? '–') ?></td>
               <td><?= e($row['cond']) ?></td>
-              <td><?= e($row['quantity']) ?></td>
+              <td><strong><?= e($row['quantity']) ?></strong></td>
               <td><?= e($row['owner_name']) ?></td>
-              <td><?= e($row['visibility']) ?></td>
+              <td>
+                <?php if ($mayEdit): ?>
+                  <form method="post" action="<?= e(base_url('container/' . $cid . '/stock/visibility')) ?>"
+                        style="display:flex;gap:4px;align-items:center">
+                    <?= $hidden ?>
+                    <select name="visibility" style="max-width:130px">
+                      <?php foreach ($visLabels as $v => $vl): ?>
+                        <option value="<?= e($v) ?>"<?= $row['visibility'] === $v ? ' selected' : '' ?>><?= e($vl) ?></option>
+                      <?php endforeach; ?>
+                    </select>
+                    <button type="submit" class="btn-ghost btn-sm" title="Sichtbarkeit speichern">✓</button>
+                  </form>
+                <?php else: ?>
+                  <?= e($row['visibility']) ?>
+                <?php endif; ?>
+              </td>
+              <td class="actions">
+                <?php if ($mayEdit): ?>
+                  <div style="display:flex;flex-direction:column;gap:6px">
+                    <form method="post" action="<?= e(base_url('container/' . $cid . '/stock/adjust')) ?>"
+                          style="display:flex;gap:4px;align-items:center">
+                      <?= $hidden ?>
+                      <input type="number" name="quantity" min="1" value="1" style="width:70px" title="Menge">
+                      <button type="submit" name="action" value="add" class="btn-ghost btn-sm" title="hinzufügen">＋</button>
+                      <button type="submit" name="action" value="remove" class="btn-ghost btn-sm" title="entnehmen">−</button>
+                    </form>
+                    <form method="post" action="<?= e(base_url('container/' . $cid . '/stock/move')) ?>"
+                          style="display:flex;gap:4px;align-items:center"
+                          onsubmit="return this.to_location_id.value !== '' || (alert('Bitte Zielort wählen.'), false)">
+                      <?= $hidden ?>
+                      <input type="number" name="quantity" min="1" value="1" style="width:70px" title="Menge umbuchen">
+                      <select name="to_location_id" style="max-width:150px">
+                        <option value="">— Zielort —</option>
+                        <?php foreach ($moveTargets as $t): ?>
+                          <?php if ((int) $t['id'] === $cid) continue; ?>
+                          <option value="<?= e($t['id']) ?>"><?= e(!empty($t['code']) ? $t['code'] . ' ' : '') . $t['name'] ?></option>
+                        <?php endforeach; ?>
+                      </select>
+                      <button type="submit" class="btn-ghost btn-sm" title="umbuchen">→</button>
+                    </form>
+                  </div>
+                <?php else: ?>
+                  <span class="hint">—</span>
+                <?php endif; ?>
+              </td>
             </tr>
           <?php endforeach; ?>
         </tbody>
       </table>
+      <p class="hint">Menge mit ＋/− korrigieren, per Zielort-Auswahl umbuchen (→) oder die
+         Sichtbarkeit ändern. Entnimm die volle Menge, um eine Position aufzulösen.</p>
     <?php endif; ?>
   </div>
 </article>

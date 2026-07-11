@@ -62,6 +62,7 @@ class HoldingRepository
         $stmt = Database::app()->prepare(
             "SELECT h.id, h.quantity, h.cond, h.visibility,
                     o.id AS owner_id, o.name AS owner_name, o.type AS owner_type,
+                    o.wcf_user_id AS owner_wcf_user_id,
                     i.id AS item_id, i.type AS item_type, i.part_num,
                     rp.name AS part_name, rc.name AS color_name,
                     (SELECT re.element_id FROM rb_elements re
