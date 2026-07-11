@@ -14,6 +14,7 @@ use App\Controller\LabelController;
 use App\Controller\StocktakeController;
 use App\Controller\InventoryController;
 use App\Controller\StockController;
+use App\Controller\ProjectController;
 
 $router->get('/', [HomeController::class, 'index']);
 $router->get('/ping', [HomeController::class, 'ping']);   // Diagnose ohne DB
@@ -24,6 +25,10 @@ $router->get('/account/{id}', [DashboardController::class, 'account']);
 $router->post('/account/{id}/branch', [LocationController::class, 'addBranch']);
 $router->post('/account/{id}/branch/move', [LocationController::class, 'moveBranch']);
 $router->post('/account/{id}/branch/delete', [LocationController::class, 'deleteBranch']);
+
+// --- Projekte (eigener Lagerbaum je Projekt) ---
+$router->get('/projects', [ProjectController::class, 'index']);
+$router->post('/projects', [ProjectController::class, 'store']);
 
 // --- Behälter (Container/Karton/Tüte) ---
 $router->get('/container', [ContainerController::class, 'index']);

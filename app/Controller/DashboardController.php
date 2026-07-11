@@ -57,8 +57,8 @@ class DashboardController extends Controller
         }
 
         $this->render('dashboard/account', [
-            'title'    => 'Konto · ' . $owner['name'],
-            'nav'      => 'dashboard',
+            'title'    => ($owner['type'] === 'projekt' ? 'Projekt · ' : 'Konto · ') . $owner['name'],
+            'nav'      => $owner['type'] === 'projekt' ? 'project' : 'dashboard',
             'owner'    => $owner,
             'isMe'     => (int) $owner['wcf_user_id'] === $user->userId,
             'byParent' => $byParent,
@@ -74,6 +74,7 @@ class DashboardController extends Controller
         if ($owner['type'] === 'verein') {
             return $user->canWrite();
         }
+        // Privat + Projekt: der/die Zugeordnete (Mitglied bzw. Projektleitung) oder Vorstand/Lagerwart.
         return ((int) $owner['wcf_user_id'] === $user->userId) || $user->canWrite();
     }
 }

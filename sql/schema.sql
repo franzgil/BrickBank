@@ -13,10 +13,11 @@ SET NAMES utf8mb4;
 -- --- Besitzer (Verein oder Privatmitglied) ---------------------------
 CREATE TABLE bb_owner (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  type ENUM('verein','privat') NOT NULL,
-  wcf_user_id INT NULL,          -- logische Referenz auf wcf1_user.userID (SSO)
+  type ENUM('verein','privat','projekt') NOT NULL,   -- 'projekt' wurzelt einen eigenen Lagerbaum
+  wcf_user_id INT NULL,          -- logische Referenz auf wcf1_user.userID (SSO); bei Projekten die Projektleitung
   name VARCHAR(120) NOT NULL,
   email VARCHAR(190) NULL,
+  note VARCHAR(255) NULL,         -- freie Beschreibung (v. a. für Projekte)
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   KEY idx_wcf_user (wcf_user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

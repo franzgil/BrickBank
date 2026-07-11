@@ -4,7 +4,8 @@
 use App\Service\CodeGenerator;
 use App\Service\ContainerRules;
 
-$label  = $isMe ? 'Mein Bestand' : $owner['name'];
+$isProject = ($owner['type'] ?? '') === 'projekt';
+$label  = ($isMe && ($owner['type'] ?? '') === 'privat') ? 'Mein Bestand' : $owner['name'];
 $accId  = (int) $owner['id'];
 $placeKinds     = ['raum', 'schrank', 'schublade', 'box', 'fach', 'sonstiges'];
 $containerKinds = ['container', 'karton', 'tuete', 'sortimentsbox', 'einsatzkasten'];
@@ -62,7 +63,12 @@ if (!function_exists('bb_render_branches')) {
 }
 ?>
 <div class="breadcrumbs">
-  <a href="<?= e(base_url('dashboard')) ?>">Dashboard</a><span class="sep">›</span><span><?= e($label) ?></span>
+  <?php if ($isProject): ?>
+    <a href="<?= e(base_url('projects')) ?>">Projekte</a>
+  <?php else: ?>
+    <a href="<?= e(base_url('dashboard')) ?>">Dashboard</a>
+  <?php endif; ?>
+  <span class="sep">›</span><span><?= e($label) ?></span>
 </div>
 
 <article class="contentBox">
@@ -71,7 +77,12 @@ if (!function_exists('bb_render_branches')) {
     <span class="pill <?= $owner['type'] === 'verein' ? 'pill-ok' : 'pill-warn' ?>" style="margin-left:6px"><?= e($owner['type']) ?></span>
   </div>
   <div class="contentBoxBody">
-    <p class="hint">Wurzel ist das Konto. Äste ohne Eltern hängen direkt am Konto.
+    <?php if ($isProject && !empty($owner['note'])): ?>
+      <p><?= e($owner['note']) ?></p>
+    <?php endif; ?>
+    <p class="hint"><?= $isProject
+        ? 'Wurzel ist das Projekt. Äste ohne Eltern hängen direkt am Projekt.'
+        : 'Wurzel ist das Konto. Äste ohne Eltern hängen direkt am Konto.' ?>
        Jeder Ast darf frei verschoben werden.</p>
     <?php if (empty($branches)): ?>
       <p>Noch keine Äste. Lege unten einen an.</p>

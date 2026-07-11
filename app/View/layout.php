@@ -44,6 +44,7 @@ $nav = isset($nav) ? $nav : '';
         <li<?= ($nav === 'home') ? ' class="active"' : '' ?>><a href="<?= e(base_url('/')) ?>">Start</a></li>
         <li<?= ($nav === 'dashboard') ? ' class="active"' : '' ?>><a href="<?= e(base_url('dashboard')) ?>">Dashboard</a></li>
         <li<?= ($nav === 'container') ? ' class="active"' : '' ?>><a href="<?= e(base_url('container')) ?>">Behälter</a></li>
+        <li<?= ($nav === 'project') ? ' class="active"' : '' ?>><a href="<?= e(base_url('projects')) ?>">Projekte</a></li>
         <li<?= ($nav === 'stock') ? ' class="active"' : '' ?>><a href="<?= e(base_url('stock')) ?>">Bestand</a></li>
         <li<?= ($nav === 'label') ? ' class="active"' : '' ?>><a href="<?= e(base_url('label')) ?>">Etiketten</a></li>
         <li<?= ($nav === 'stocktake') ? ' class="active"' : '' ?>><a href="<?= e(base_url('stocktake')) ?>">Inventur</a></li>

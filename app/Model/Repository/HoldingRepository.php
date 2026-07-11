@@ -157,7 +157,7 @@ class HoldingRepository
                     COALESCE(SUM(h.quantity),0) AS total_qty
              FROM bb_holding h
              JOIN bb_owner o ON o.id = h.owner_id
-             WHERE ' . $this->visClause() . '
+             WHERE o.type <> \'projekt\' AND ' . $this->visClause() . '
              GROUP BY o.id
              ORDER BY (o.type = \'verein\') DESC, (o.wcf_user_id = ?) DESC, o.name'
         );
