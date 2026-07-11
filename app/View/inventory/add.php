@@ -26,15 +26,30 @@ use App\Service\ContainerRules;
     </form>
 
     <?php if (!empty($results)): ?>
+      <?php
+        $addBase  = base_url('container/' . $container['id'] . '/add');
+        $lastPage = (int) max(1, ceil($resultTotal / $resultLimit));
+        $pageUrl  = function ($p) use ($addBase, $q) {
+            return $addBase . '?q=' . urlencode($q) . '&page=' . (int) $p;
+        };
+      ?>
       <p class="hint">
         <?= (int) $resultTotal ?> Treffer<?php if ($resultTotal > count($results)): ?>,
-          angezeigt die ersten <?= count($results) ?> — bitte Suche verfeinern.<?php endif; ?>
+          angezeigt <?= (int) $resultFrom ?>–<?= (int) $resultTo ?> (Seite <?= (int) $page ?> von <?= $lastPage ?>)<?php endif; ?>
       </p>
       <table>
-        <thead><tr><th>Teil-Nr.</th><th>Name</th><th>Kategorie</th><th></th></tr></thead>
+        <thead><tr><th style="width:54px">Bild</th><th>Teil-Nr.</th><th>Name</th><th>Kategorie</th><th></th></tr></thead>
         <tbody>
           <?php foreach ($results as $r): ?>
+            <?php $img = part_image_url($r['element_id'] ?? null); ?>
             <tr>
+              <td>
+                <?php if ($img !== null): ?>
+                  <img src="<?= e($img) ?>" alt="" loading="lazy"
+                       style="width:42px;height:42px;object-fit:contain;border-radius:5px;border:1px solid var(--wcfContentBorder)"
+                       onerror="this.style.display='none'">
+                <?php else: ?>–<?php endif; ?>
+              </td>
               <td><code><?= e($r['part_num']) ?></code></td>
               <td><?= e($r['name']) ?></td>
               <td><?= e($r['category'] ?? '–') ?></td>
@@ -46,6 +61,17 @@ use App\Service\ContainerRules;
           <?php endforeach; ?>
         </tbody>
       </table>
+      <?php if ($lastPage > 1): ?>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap">
+          <?php if ($page > 1): ?>
+            <a class="btn-ghost btn-sm" href="<?= e($pageUrl($page - 1)) ?>">← vorherige 200</a>
+          <?php endif; ?>
+          <span class="hint">Seite <?= (int) $page ?> von <?= $lastPage ?></span>
+          <?php if ($page < $lastPage): ?>
+            <a class="btn btn-sm" href="<?= e($pageUrl($page + 1)) ?>">nächste 200 →</a>
+          <?php endif; ?>
+        </div>
+      <?php endif; ?>
     <?php elseif ($q !== '' && $part === null): ?>
       <p>Keine Teile zu „<?= e($q) ?>" gefunden.</p>
     <?php endif; ?>

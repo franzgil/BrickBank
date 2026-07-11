@@ -10,19 +10,27 @@ use App\Core\Database;
  */
 class CatalogRepository
 {
-    /** Teile-Suche nach Teilenummer oder Name (token- und leerzeichentolerant). */
-    public function searchParts(string $query, int $limit = 200): array
+    /**
+     * Teile-Suche nach Teilenummer oder Name (token- und leerzeichentolerant).
+     * $offset erlaubt seitenweises Blättern (z. B. die nächsten 200).
+     * Liefert je Teil eine repräsentative element_id (für ein Vorschaubild).
+     */
+    public function searchParts(string $query, int $limit = 200, int $offset = 0): array
     {
-        $limit = max(1, min(1000, $limit));
+        $limit  = max(1, min(1000, $limit));
+        $offset = max(0, $offset);
         list($where, $params) = $this->buildSearch($query);
 
         $params[] = trim($query); // für die Sortierung (exakte Teilenummer zuerst)
-        $sql = 'SELECT p.part_num, p.name, pc.name AS category
+        $sql = 'SELECT p.part_num, p.name, pc.name AS category,
+                       (SELECT re.element_id FROM rb_elements re
+                         WHERE re.part_num = p.part_num
+                         ORDER BY re.element_id LIMIT 1) AS element_id
                 FROM rb_parts p
                 LEFT JOIN rb_part_categories pc ON pc.id = p.part_cat_id
                 WHERE ' . $where . '
                 ORDER BY (p.part_num = ?) DESC, p.name
-                LIMIT ' . $limit;
+                LIMIT ' . $limit . ' OFFSET ' . $offset;
         $stmt = Database::app()->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetchAll();

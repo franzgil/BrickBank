@@ -50,6 +50,8 @@ class InventoryController extends Controller
         $q       = trim((string) $this->request->get('q', ''));
         $partNum = trim((string) $this->request->get('part', ''));
         $limit   = 200;
+        $page    = max(1, (int) $this->request->get('page', 1));
+        $offset  = ($page - 1) * $limit;
 
         $verein = $this->owners->verein();
         $data = [
@@ -60,6 +62,9 @@ class InventoryController extends Controller
             'results'     => [],
             'resultTotal' => 0,
             'resultLimit' => $limit,
+            'page'        => $page,
+            'resultFrom'  => 0,
+            'resultTo'    => 0,
             'part'        => null,
             'colors'      => [],
             'memberName'  => $user->username,
@@ -78,8 +83,18 @@ class InventoryController extends Controller
                 $this->flash('error', 'Teil „' . $partNum . '" nicht im Katalog gefunden.');
             }
         } elseif ($q !== '') {
-            $data['results']     = $this->catalog->searchParts($q, $limit);
-            $data['resultTotal'] = $this->catalog->countParts($q);
+            $total = $this->catalog->countParts($q);
+            // Falls die gewählte Seite hinter dem Ende liegt, auf die letzte Seite springen.
+            if ($total > 0 && $offset >= $total) {
+                $page   = (int) ceil($total / $limit);
+                $offset = ($page - 1) * $limit;
+            }
+            $results = $this->catalog->searchParts($q, $limit, $offset);
+            $data['results']     = $results;
+            $data['resultTotal'] = $total;
+            $data['page']        = $page;
+            $data['resultFrom']  = $total > 0 ? $offset + 1 : 0;
+            $data['resultTo']    = $offset + count($results);
         }
 
         $this->render('inventory/add', $data);
