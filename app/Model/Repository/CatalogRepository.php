@@ -51,11 +51,12 @@ class CatalogRepository
 
     /**
      * Schließt bedruckte Teile aus, wenn $includePrinted = false.
-     * Bedruckte Teilenummern haben „pr" gefolgt von Ziffern (z. B. 2431pr0121).
+     * Bedruckte Teilenummern haben „pr", „pb" oder „pat" gefolgt von Ziffern
+     * (z. B. 2431pr0121, 973pb1234, 3626bpat0001).
      */
     private function printedExclusion(bool $includePrinted): string
     {
-        return $includePrinted ? '' : " AND p.part_num NOT REGEXP 'pr[0-9]'";
+        return $includePrinted ? '' : " AND p.part_num NOT REGEXP '(pr|pb|pat)[0-9]'";
     }
 
     /** Alle Teilekategorien (id, name) für den Kategorie-Filter. */

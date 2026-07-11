@@ -28,7 +28,7 @@ use App\Service\ContainerRules;
       <div class="formRow">
         <label style="display:flex;gap:6px;align-items:center;font-weight:normal">
           <input type="checkbox" name="printed" value="1"<?= !empty($includePrinted) ? ' checked' : '' ?>>
-          Bedruckte Teile anzeigen <span class="hint">(z. B. 2431pr0121 – standardmäßig ausgeblendet)</span>
+          Bedruckte Teile anzeigen <span class="hint">(z. B. 2431pr0121, 973pb1234 – standardmäßig ausgeblendet)</span>
         </label>
       </div>
 
