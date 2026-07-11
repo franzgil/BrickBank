@@ -50,9 +50,11 @@ class CatalogRepository
      * Jeder Suchbegriff (durch Leerzeichen getrennt) muss vorkommen –
      * entweder in der Teilenummer oder im Namen.
      *
-     * - Reine Wort-Begriffe (nur Buchstaben, z. B. „Plate") matchen nur am
-     *   Wortanfang (Namensanfang oder nach einem Leerzeichen), damit „Plate"
-     *   NICHT „Baseplate" trifft.
+     * - Der erste Wort-Begriff (nur Buchstaben, z. B. „Plate") ist der Teiletyp
+     *   und muss am NAMENSANFANG stehen. So trifft „Plate" weder „Baseplate"
+     *   (ein Wort) noch „Base Plate" (zwei Wörter).
+     * - Weitere Wort-Begriffe matchen am Wortanfang (Namensanfang oder nach
+     *   einem Leerzeichen).
      * - Begriffe mit Ziffern/„x" (z. B. „2x4") matchen leerzeichentolerant
      *   („2x4" trifft „2 x 4").
      *
@@ -64,17 +66,26 @@ class CatalogRepository
         if (empty($tokens)) {
             return ['1=0', []];
         }
-        $clauses = [];
-        $params  = [];
+        $clauses  = [];
+        $params   = [];
+        $firstAlpha = true;   // erster reiner Wort-Begriff = Teiletyp
         foreach ($tokens as $t) {
             // LIKE-Sonderzeichen entschärfen.
             $esc = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $t);
             if (ctype_alpha($t)) {
-                // Wortanfang: Name beginnt mit dem Begriff oder er folgt einem Leerzeichen.
-                $clauses[] = '(p.part_num LIKE ? OR p.name LIKE ? OR p.name LIKE ?)';
-                $params[]  = '%' . $esc . '%';
-                $params[]  = $esc . '%';
-                $params[]  = '% ' . $esc . '%';
+                if ($firstAlpha) {
+                    // Teiletyp: Name muss mit dem Begriff beginnen.
+                    $clauses[] = '(p.part_num LIKE ? OR p.name LIKE ?)';
+                    $params[]  = '%' . $esc . '%';
+                    $params[]  = $esc . '%';
+                    $firstAlpha = false;
+                } else {
+                    // Wortanfang: Namensanfang oder nach einem Leerzeichen.
+                    $clauses[] = '(p.part_num LIKE ? OR p.name LIKE ? OR p.name LIKE ?)';
+                    $params[]  = '%' . $esc . '%';
+                    $params[]  = $esc . '%';
+                    $params[]  = '% ' . $esc . '%';
+                }
             } else {
                 // Leerzeichentolerant (Maße wie „2x4").
                 $like = '%' . $esc . '%';
