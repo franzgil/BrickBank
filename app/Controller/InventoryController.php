@@ -58,6 +58,7 @@ class InventoryController extends Controller
         $categories = $this->catalog->categories();
         $allCatIds  = array_map(function ($c) { return (int) $c['id']; }, $categories);
         $excludedCatIds = $this->resolveExcludedCategories($categories, $allCatIds);
+        $includePrinted = $this->resolveIncludePrinted();
 
         $verein = $this->owners->verein();
         $data = [
@@ -75,6 +76,7 @@ class InventoryController extends Controller
             'colors'         => [],
             'categories'     => $categories,
             'excludedCatIds' => $excludedCatIds,
+            'includePrinted' => $includePrinted,
             'memberName'     => $user->username,
             'vereinName'     => $verein ? $verein['name'] : null,
             'canVerein'      => $user->canWrite(),
@@ -91,13 +93,13 @@ class InventoryController extends Controller
                 $this->flash('error', 'Teil „' . $partNum . '" nicht im Katalog gefunden.');
             }
         } elseif ($q !== '') {
-            $total = $this->catalog->countParts($q, $excludedCatIds);
+            $total = $this->catalog->countParts($q, $excludedCatIds, $includePrinted);
             // Falls die gewählte Seite hinter dem Ende liegt, auf die letzte Seite springen.
             if ($total > 0 && $offset >= $total) {
                 $page   = (int) ceil($total / $limit);
                 $offset = ($page - 1) * $limit;
             }
-            $results = $this->catalog->searchParts($q, $limit, $offset, $excludedCatIds);
+            $results = $this->catalog->searchParts($q, $limit, $offset, $excludedCatIds, $includePrinted);
             $data['results']     = $results;
             $data['resultTotal'] = $total;
             $data['page']        = $page;
@@ -138,6 +140,19 @@ class InventoryController extends Controller
             }
         }
         return array_values(array_intersect($allCatIds, array_map('intval', $excluded)));
+    }
+
+    /**
+     * Sollen bedruckte Teile mit angezeigt werden?
+     * Bei aktivem Filter (catform/cf) entscheidet die Checkbox `printed`,
+     * sonst der Default (Config search.hide_printed, standardmäßig ausblenden).
+     */
+    private function resolveIncludePrinted(): bool
+    {
+        if ($this->request->get('catform') !== null || $this->request->get('cf') !== null) {
+            return $this->request->get('printed') !== null;
+        }
+        return !((bool) Config::get('search.hide_printed', true));
     }
 
     public function store($id): void

@@ -66,6 +66,9 @@ return [
             'Non-Buildable Figures',  // „Non-Buildable Figures (Duplo, Fabuland, etc)"
             'Znap',
         ],
+        // Bedruckte Teile (Teilenummer mit „pr" + Ziffern, z. B. 2431pr0121)
+        // standardmäßig ausblenden. Pro Suche wieder einblendbar.
+        'hide_printed' => true,
     ],
 
     // Etiketten-/Code-Konfiguration (Modul Behälter/Inventur).

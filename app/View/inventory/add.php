@@ -25,6 +25,13 @@ use App\Service\ContainerRules;
         <input type="search" id="q" name="q" value="<?= e($q) ?>" placeholder="z. B. 3001 oder „Brick 2 x 4"" autofocus>
       </div>
 
+      <div class="formRow">
+        <label style="display:flex;gap:6px;align-items:center;font-weight:normal">
+          <input type="checkbox" name="printed" value="1"<?= !empty($includePrinted) ? ' checked' : '' ?>>
+          Bedruckte Teile anzeigen <span class="hint">(z. B. 2431pr0121 – standardmäßig ausgeblendet)</span>
+        </label>
+      </div>
+
       <details style="margin:6px 0 10px">
         <summary style="cursor:pointer">Kategorien
           <?php if ($hiddenCats > 0): ?><span class="pill pill-warn" style="margin-left:6px"><?= $hiddenCats ?> ausgeblendet</span><?php endif; ?>
@@ -60,10 +67,13 @@ use App\Service\ContainerRules;
       <?php
         $addBase  = base_url('container/' . $container['id'] . '/add');
         $lastPage = (int) max(1, ceil($resultTotal / $resultLimit));
-        $pageUrl  = function ($p) use ($addBase, $q, $excludedCatIds) {
+        $pageUrl  = function ($p) use ($addBase, $q, $excludedCatIds, $includePrinted) {
             $url = $addBase . '?q=' . urlencode($q) . '&page=' . (int) $p . '&cf=1';
             foreach ($excludedCatIds as $xid) {
                 $url .= '&xcat%5B%5D=' . (int) $xid;   // ausgeblendete Kategorien mitführen
+            }
+            if (!empty($includePrinted)) {
+                $url .= '&printed=1';                  // Anzeige bedruckter Teile mitführen
             }
             return $url;
         };

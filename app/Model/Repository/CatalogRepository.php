@@ -15,12 +15,13 @@ class CatalogRepository
      * $offset erlaubt seitenweises Blättern (z. B. die nächsten 200).
      * Liefert je Teil eine repräsentative element_id (für ein Vorschaubild).
      */
-    public function searchParts(string $query, int $limit = 200, int $offset = 0, array $excludeCatIds = []): array
+    public function searchParts(string $query, int $limit = 200, int $offset = 0, array $excludeCatIds = [], bool $includePrinted = true): array
     {
         $limit  = max(1, min(1000, $limit));
         $offset = max(0, $offset);
         list($where, $params) = $this->buildSearch($query);
         $where .= $this->categoryExclusion($excludeCatIds, $params);
+        $where .= $this->printedExclusion($includePrinted);
 
         $params[] = trim($query); // für die Sortierung (exakte Teilenummer zuerst)
         $sql = 'SELECT p.part_num, p.name, pc.name AS category,
@@ -38,13 +39,23 @@ class CatalogRepository
     }
 
     /** Gesamtzahl der Treffer zu einer Teile-Suche (für die Anzeige). */
-    public function countParts(string $query, array $excludeCatIds = []): int
+    public function countParts(string $query, array $excludeCatIds = [], bool $includePrinted = true): int
     {
         list($where, $params) = $this->buildSearch($query);
         $where .= $this->categoryExclusion($excludeCatIds, $params);
+        $where .= $this->printedExclusion($includePrinted);
         $stmt = Database::app()->prepare('SELECT COUNT(*) FROM rb_parts p WHERE ' . $where);
         $stmt->execute($params);
         return (int) $stmt->fetchColumn();
+    }
+
+    /**
+     * Schließt bedruckte Teile aus, wenn $includePrinted = false.
+     * Bedruckte Teilenummern haben „pr" gefolgt von Ziffern (z. B. 2431pr0121).
+     */
+    private function printedExclusion(bool $includePrinted): string
+    {
+        return $includePrinted ? '' : " AND p.part_num NOT REGEXP 'pr[0-9]'";
     }
 
     /** Alle Teilekategorien (id, name) für den Kategorie-Filter. */
