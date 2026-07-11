@@ -64,7 +64,7 @@ class HoldingRepository
                     o.id AS owner_id, o.name AS owner_name, o.type AS owner_type,
                     o.wcf_user_id AS owner_wcf_user_id,
                     i.id AS item_id, i.type AS item_type, i.part_num, i.color_id,
-                    rp.name AS part_name, rc.name AS color_name,
+                    rp.name AS part_name, rc.name AS color_name, pc.name AS category,
                     (SELECT re.element_id FROM rb_elements re
                       WHERE i.type = 'element' AND re.part_num = i.part_num
                             AND re.color_id = i.color_id
@@ -73,6 +73,7 @@ class HoldingRepository
              JOIN bb_item  i ON i.id = h.item_id
              JOIN bb_owner o ON o.id = h.owner_id
              LEFT JOIN rb_parts  rp ON i.type = 'element' AND rp.part_num = i.part_num
+             LEFT JOIN rb_part_categories pc ON pc.id = rp.part_cat_id
              LEFT JOIN rb_colors rc ON i.type = 'element' AND rc.id = i.color_id
              WHERE h.location_id = ? AND h.quantity > 0 AND " . $this->visClause() . "
              ORDER BY rp.name, rc.name, h.cond"

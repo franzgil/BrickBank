@@ -124,7 +124,7 @@ use App\Service\ContainerRules;
     <?php else: ?>
       <?php $visLabels = ['privat' => 'privat', 'intern' => 'intern', 'verein' => 'für Verein']; ?>
       <table>
-        <thead><tr><th style="width:54px">Bild</th><th>Teil-Nr.</th><th>Teil</th><th>Farbe</th><th>Zustand</th><th>Menge</th><th>Besitzer</th><th>Sichtbarkeit</th><th>Umbuchen / Löschen</th></tr></thead>
+        <thead><tr><th style="width:54px">Bild</th><th>Teil-Nr.</th><th>Teil</th><th>Kategorie</th><th>Farbe</th><th>Zustand</th><th>Menge</th><th>Besitzer</th><th>Sichtbarkeit</th><th>Umbuchen / Löschen</th></tr></thead>
         <tbody>
           <?php foreach ($contents as $row): ?>
             <?php
@@ -150,6 +150,7 @@ use App\Service\ContainerRules;
               </td>
               <td><?= e($row['part_num'] ?? '–') ?></td>
               <td><a href="<?= e(base_url('item/' . $row['item_id'])) ?>"><?= e($row['part_name'] ?? ('(' . $row['item_type'] . ')')) ?></a></td>
+              <td><?= e($row['category'] ?? '–') ?></td>
 
               <td>
                 <?php if ($mayEdit && $row['item_type'] === 'element'): ?>
