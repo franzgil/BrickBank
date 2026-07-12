@@ -124,7 +124,7 @@ use App\Service\ContainerRules;
     <?php else: ?>
       <?php $visLabels = ['privat' => 'privat', 'intern' => 'intern', 'verein' => 'für Verein']; ?>
       <table>
-        <thead><tr><th style="width:54px">Bild</th><th>Teil-Nr.</th><th>Teil</th><th>Kategorie</th><th>Farbe</th><th>Zustand</th><th>Menge</th><th>Besitzer</th><th>Sichtbarkeit</th><th>Umbuchen / Löschen</th></tr></thead>
+        <thead><tr><th style="width:54px">Bild</th><th>Teil-Nr.</th><th>Teil</th><th>Kategorie</th><th>Farbe</th><th>Zustand</th><th>Menge</th><th>Besitzer</th><th>Sichtbarkeit</th><th>Geändert</th><th>Umbuchen / Löschen</th></tr></thead>
         <tbody>
           <?php foreach ($contents as $row): ?>
             <?php
@@ -223,6 +223,16 @@ use App\Service\ContainerRules;
                 <?php else: ?>
                   <?= e($row['visibility']) ?>
                 <?php endif; ?>
+              </td>
+
+              <td style="white-space:nowrap">
+                <?php $ts = !empty($row['updated_at']) ? date('d.m.Y H:i', strtotime($row['updated_at'])) : '–'; ?>
+                <?= e($ts) ?><br>
+                <a class="btn-ghost btn-sm"
+                   href="<?= e(base_url('container/' . $cid . '/stock/history')
+                        . '?item_id=' . (int) $row['item_id']
+                        . '&owner_id=' . (int) $row['owner_id']
+                        . '&cond=' . urlencode($row['cond'])) ?>">Verlauf</a>
               </td>
 
               <td class="actions">

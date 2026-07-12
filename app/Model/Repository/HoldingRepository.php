@@ -60,7 +60,7 @@ class HoldingRepository
     public function contentsOfLocation(int $locationId, ?int $viewer): array
     {
         $stmt = Database::app()->prepare(
-            "SELECT h.id, h.quantity, h.cond, h.visibility,
+            "SELECT h.id, h.quantity, h.cond, h.visibility, h.updated_at,
                     o.id AS owner_id, o.name AS owner_name, o.type AS owner_type,
                     o.wcf_user_id AS owner_wcf_user_id,
                     i.id AS item_id, i.type AS item_type, i.part_num, i.color_id, i.unit_weight,

@@ -10,6 +10,7 @@ use App\Model\Repository\ItemRepository;
 use App\Model\Repository\LabelRepository;
 use App\Model\Repository\LocationRepository;
 use App\Model\Repository\OwnerRepository;
+use App\Model\Repository\StockMovementRepository;
 use App\Service\CodeGenerator;
 use App\Service\ContainerRules;
 use App\Service\StockService;
@@ -30,6 +31,8 @@ class ContainerController extends Controller
     private $items;
     /** @var CatalogRepository */
     private $catalog;
+    /** @var StockMovementRepository */
+    private $movements;
 
     public function __construct()
     {
@@ -41,6 +44,7 @@ class ContainerController extends Controller
         $this->stock     = new StockService();
         $this->items     = new ItemRepository();
         $this->catalog   = new CatalogRepository();
+        $this->movements = new StockMovementRepository();
     }
 
     /** Liste aller Behälter, optional auf einen Typ gefiltert (?kind=). */
@@ -262,6 +266,36 @@ class ContainerController extends Controller
             $this->flash('error', $e->getMessage());
         }
         $this->redirect($back);
+    }
+
+    /** Alle Änderungen einer Bestandsposition (Item·Ort·Besitzer·Zustand). */
+    public function stockHistory($id): void
+    {
+        $this->requireLogin();
+        $locationId = (int) $id;
+        $itemId     = (int) $this->request->get('item_id', 0);
+        $ownerId    = (int) $this->request->get('owner_id', 0);
+        $cond       = (string) $this->request->get('cond', 'gebraucht');
+
+        $container = $this->locations->findDetail($locationId);
+        if ($container === null) {
+            http_response_code(404);
+            echo 'Behälter nicht gefunden';
+            return;
+        }
+        $item  = $this->items->detail($itemId);
+        $owner = $this->owners->find($ownerId);
+
+        $this->render('container/stock_history', [
+            'title'      => 'Verlauf · ' . ($item['part_name'] ?? $itemId),
+            'nav'        => 'container',
+            'container'  => $container,
+            'item'       => $item,
+            'owner'      => $owner,
+            'cond'       => $cond,
+            'locationId' => $locationId,
+            'history'    => $this->movements->historyByPosition($itemId, $locationId, $ownerId, $cond),
+        ]);
     }
 
     /**
