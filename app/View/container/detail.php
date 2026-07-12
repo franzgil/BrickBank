@@ -191,6 +191,18 @@ use App\Service\ContainerRules;
                     <input type="number" name="quantity" min="0" value="<?= $qty ?>" style="width:80px"
                            title="Menge direkt setzen (Enter oder Verlassen des Feldes)" onchange="this.form.submit()">
                   </form>
+                  <form method="post" action="<?= $url('weight') ?>" style="margin:4px 0 0"
+                        title="Menge per Waage zählen: Gesamtgewicht ÷ Einzelgewicht">
+                    <?= $hidden ?>
+                    <div style="display:flex;gap:3px;align-items:center;flex-wrap:wrap">
+                      <input type="number" name="unit_weight" step="0.001" min="0" style="width:64px"
+                             value="<?= $row['unit_weight'] !== null ? e(rtrim(rtrim((string) $row['unit_weight'], '0'), '.')) : '' ?>"
+                             placeholder="g/Stk" title="Einzelgewicht (g pro Stück)">
+                      <input type="number" name="total_weight" step="0.001" min="0" style="width:64px"
+                             placeholder="g ges." title="Gesamtgewicht (g)">
+                      <button type="submit" class="btn-ghost btn-sm" title="per Gewicht zählen">⚖</button>
+                    </div>
+                  </form>
                 <?php else: ?>
                   <strong><?= e($row['quantity']) ?></strong>
                 <?php endif; ?>
@@ -245,8 +257,10 @@ use App\Service\ContainerRules;
         </tbody>
       </table>
       <p class="hint">Farbe, Zustand, Menge und Sichtbarkeit sind direkt editierbar – die Änderung
-         wird sofort gespeichert. Über die Zielort-Auswahl umbuchen (→) oder die Position mit 🗑
-         vollständig löschen. Menge auf 0 setzen entfernt die Position ebenfalls.</p>
+         wird sofort gespeichert. Menge auch per Waage zählbar: Einzelgewicht (g/Stück) und
+         Gesamtgewicht eingeben, ⚖ setzt die Stückzahl (Gesamt ÷ Einzel). Das Einzelgewicht
+         wird gemerkt. Über die Zielort-Auswahl umbuchen (→) oder die Position mit 🗑 löschen;
+         Menge auf 0 setzen entfernt sie ebenfalls.</p>
     <?php endif; ?>
   </div>
 </article>

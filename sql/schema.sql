@@ -80,6 +80,7 @@ CREATE TABLE bb_item (
   color_id INT NULL,           -- element → rb_colors.id
   set_num  VARCHAR(20) NULL,   -- set     → rb_sets.set_num
   fig_num  VARCHAR(20) NULL,   -- minifig → rb_minifigs.fig_num
+  unit_weight DECIMAL(8,3) NULL,    -- Einzelgewicht in Gramm (Zählen per Waage)
   item_key VARCHAR(48) NOT NULL,    -- kanonischer Schlüssel: E:part:color, S:set, M:fig
   UNIQUE KEY uq_item_key (item_key),
   KEY idx_item_element (part_num, color_id),

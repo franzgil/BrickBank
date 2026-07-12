@@ -29,6 +29,13 @@ class ItemRepository
         return (int) $stmt->fetchColumn();
     }
 
+    /** Einzelgewicht (Gramm) eines Items setzen/löschen. */
+    public function setUnitWeight(int $id, ?float $grams): void
+    {
+        Database::app()->prepare('UPDATE bb_item SET unit_weight = ? WHERE id = ?')
+            ->execute([$grams, $id]);
+    }
+
     public function find(int $id): ?array
     {
         $stmt = Database::app()->prepare(

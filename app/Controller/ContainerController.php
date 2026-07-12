@@ -264,6 +264,57 @@ class ContainerController extends Controller
         $this->redirect($back);
     }
 
+    /**
+     * Menge einer Position per Waage zählen: aus Einzel- und Gesamtgewicht
+     * die Stückzahl berechnen (qty = gesamt / einzel) und absolut setzen.
+     * Das Einzelgewicht wird am Item gespeichert.
+     */
+    public function setStockByWeight($id): void
+    {
+        $user = $this->requireLogin();
+        Csrf::validate($this->request->post('csrf_token'));
+        $locationId = (int) $id;
+        $itemId     = (int) $this->request->post('item_id', 0);
+        $ownerId    = (int) $this->request->post('owner_id', 0);
+        $cond       = (string) $this->request->post('cond', 'gebraucht');
+        $unit       = (float) str_replace(',', '.', (string) $this->request->post('unit_weight', ''));
+        $total      = (float) str_replace(',', '.', (string) $this->request->post('total_weight', ''));
+        $back       = base_url('container/' . $locationId);
+
+        if (!$this->mayEditOwner($ownerId, $user)) {
+            $this->flash('error', 'Keine Berechtigung für diese Position.');
+            $this->redirect($back);
+        }
+        if ($unit <= 0) {
+            $this->flash('error', 'Einzelgewicht muss größer als 0 sein.');
+            $this->redirect($back);
+        }
+        if ($total < 0) {
+            $this->flash('error', 'Gesamtgewicht darf nicht negativ sein.');
+            $this->redirect($back);
+        }
+
+        // Einzelgewicht am Item merken (für die nächste Zählung).
+        $this->items->setUnitWeight($itemId, $unit);
+
+        $targetQty = (int) round($total / $unit);
+        $existing  = $this->holdings->findExact($itemId, $locationId, $ownerId, $cond);
+        $current   = $existing ? (int) $existing['quantity'] : 0;
+        $delta     = $targetQty - $current;
+        try {
+            if ($delta > 0) {
+                $visibility = $existing ? $existing['visibility'] : 'privat';
+                $this->stock->add($itemId, $locationId, $ownerId, $cond, $visibility, $delta, $user->userId, 'Zählung per Gewicht');
+            } elseif ($delta < 0) {
+                $this->stock->remove($itemId, $locationId, $ownerId, $cond, -$delta, $user->userId, 'Zählung per Gewicht');
+            }
+            $this->flash('success', 'Per Gewicht gezählt: ' . $targetQty . ' Stück (' . $total . ' g ÷ ' . $unit . ' g).');
+        } catch (\Throwable $e) {
+            $this->flash('error', $e->getMessage());
+        }
+        $this->redirect($back);
+    }
+
     /** Eine Bestandsposition vollständig aus dem Behälter entfernen. */
     public function deleteStock($id): void
     {
