@@ -95,8 +95,12 @@ class CatalogRepository
      *   (ein Wort) noch „Base Plate" (zwei Wörter).
      * - Weitere Wort-Begriffe matchen am Wortanfang (Namensanfang oder nach
      *   einem Leerzeichen).
-     * - Begriffe mit Ziffern/„x" (z. B. „2x4") matchen leerzeichentolerant
-     *   („2x4" trifft „2 x 4").
+     * - Maßangaben werden zusammengeführt („2","x","3" → „2x3") und
+     *   zusammenhängend NUR im Namen gesucht (leerzeichentolerant). Sie werden
+     *   NICHT gegen die Teilenummer geprüft – sonst würde die Ziffer „3" aus
+     *   „2 x 3" fälschlich Teil 3003 („Brick 2 x 2") treffen.
+     * - Teilenummer-artige Begriffe (lange Zahl oder alphanumerischer Code)
+     *   werden gegen Teilenummer und Namen geprüft.
      *
      * @return array{0:string,1:array}
      */
@@ -106,34 +110,62 @@ class CatalogRepository
         if (empty($tokens)) {
             return ['1=0', []];
         }
-        $clauses  = [];
-        $params   = [];
+
+        // Maßangaben zusammenführen: "2","x","3" → "2x3" (auch "2x2x3").
+        $merged = [];
+        $n = count($tokens);
+        for ($i = 0; $i < $n; $i++) {
+            $t = $tokens[$i];
+            if (preg_match('~^[0-9]+$~', $t)) {
+                $dim = $t;
+                while ($i + 2 < $n
+                       && strcasecmp($tokens[$i + 1], 'x') === 0
+                       && preg_match('~^[0-9]+$~', $tokens[$i + 2])) {
+                    $dim .= 'x' . $tokens[$i + 2];
+                    $i += 2;
+                }
+                $merged[] = $dim;
+            } else {
+                $merged[] = $t;
+            }
+        }
+
+        $clauses    = [];
+        $params     = [];
         $firstAlpha = true;   // erster reiner Wort-Begriff = Teiletyp
-        foreach ($tokens as $t) {
+        foreach ($merged as $t) {
             // LIKE-Sonderzeichen entschärfen.
-            $esc = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $t);
-            if (ctype_alpha($t)) {
+            $esc  = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $t);
+            $like = '%' . $esc . '%';
+
+            if (strcasecmp($t, 'x') === 0) {
+                // einzelner Maß-Trenner: nur im Namen.
+                $clauses[] = "REPLACE(p.name, ' ', '') LIKE ?";
+                $params[]  = $like;
+            } elseif (ctype_alpha($t)) {
                 if ($firstAlpha) {
                     // Teiletyp: Name muss mit dem Begriff beginnen.
-                    $clauses[] = '(p.part_num LIKE ? OR p.name LIKE ?)';
-                    $params[]  = '%' . $esc . '%';
+                    $clauses[] = 'p.name LIKE ?';
                     $params[]  = $esc . '%';
                     $firstAlpha = false;
                 } else {
                     // Wortanfang: Namensanfang oder nach einem Leerzeichen.
-                    $clauses[] = '(p.part_num LIKE ? OR p.name LIKE ? OR p.name LIKE ?)';
-                    $params[]  = '%' . $esc . '%';
+                    $clauses[] = '(p.name LIKE ? OR p.name LIKE ?)';
                     $params[]  = $esc . '%';
                     $params[]  = '% ' . $esc . '%';
                 }
+            } elseif (preg_match('~^[0-9]+(x[0-9]+)+$~i', $t) || (ctype_digit($t) && strlen($t) <= 2)) {
+                // Maßangabe (2x3, 2x2x3 oder kurze Zahl): nur im Namen, zusammenhängend.
+                $clauses[] = "REPLACE(p.name, ' ', '') LIKE ?";
+                $params[]  = $like;
             } else {
-                // Leerzeichentolerant (Maße wie „2x4").
-                $like = '%' . $esc . '%';
+                // Teilenummer-artig (lange Zahl, alphanumerischer Code): Nr. oder Name.
                 $clauses[] = "(p.part_num LIKE ? OR REPLACE(p.name, ' ', '') LIKE ?)";
                 $params[]  = $like;
                 $params[]  = $like;
             }
         }
+
         return ['(' . implode(' AND ', $clauses) . ')', $params];
     }
 
