@@ -36,6 +36,22 @@ class ItemRepository
             ->execute([$grams, $id]);
     }
 
+    /**
+     * Bekanntes Einzelgewicht für ein Teil (irgendeine Farbe), zum Vorbelegen.
+     * Gewicht ist praktisch farbunabhängig, daher genügt die Teilenummer.
+     */
+    public function unitWeightForPart(string $partNum): ?float
+    {
+        $stmt = Database::app()->prepare(
+            "SELECT unit_weight FROM bb_item
+             WHERE type = 'element' AND part_num = ? AND unit_weight IS NOT NULL
+             ORDER BY id LIMIT 1"
+        );
+        $stmt->execute([$partNum]);
+        $v = $stmt->fetchColumn();
+        return ($v !== false && $v !== null) ? (float) $v : null;
+    }
+
     public function find(int $id): ?array
     {
         $stmt = Database::app()->prepare(

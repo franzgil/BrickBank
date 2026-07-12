@@ -155,6 +155,28 @@ use App\Service\ContainerRules;
       </div>
 
       <div class="formRow">
+        <label>Zählen per Gewicht (optional)</label>
+        <?php $uw = $unitWeight !== null ? rtrim(rtrim(number_format((float) $unitWeight, 3, '.', ''), '0'), '.') : ''; ?>
+        <div style="display:flex;flex-direction:column;gap:8px;max-width:520px;padding:10px;border:1px solid var(--wcfContentBorder);border-radius:6px">
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <span style="min-width:130px">Einzelgewicht</span>
+            <input type="number" id="bbUnit" name="unit_weight" step="0.001" min="0" value="<?= e($uw) ?>" style="width:110px"> g/Stück
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <span style="min-width:130px">Kalibrieren</span>
+            <input type="number" id="bbRefQty" step="1" min="1" placeholder="Menge" style="width:90px"> Stück wiegen
+            <input type="number" id="bbRefW" step="0.001" min="0" placeholder="g" style="width:90px"> g
+            <span class="hint">→ Einzelgewicht = Gewicht ÷ Menge</span>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <span style="min-width:130px">Gesamtgewicht</span>
+            <input type="number" id="bbTotal" step="0.001" min="0" placeholder="g" style="width:110px"> g
+            <span class="hint">→ setzt die Menge (Gesamt ÷ Einzelgewicht)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="formRow">
         <label for="owner_scope">Besitzer</label>
         <select id="owner_scope" name="owner_scope">
           <option value="mein">Mein Bestand (<?= e($memberName) ?>)</option>
@@ -177,6 +199,28 @@ use App\Service\ContainerRules;
       <button type="submit" class="btn btn-accent">Bestand buchen</button>
       <a class="btn-ghost" href="<?= e(base_url('container/' . $container['id'])) ?>">Fertig</a>
     </form>
+    <script>
+    (function () {
+      function num(el) { return el ? parseFloat((el.value || '').replace(',', '.')) : NaN; }
+      var unit  = document.getElementById('bbUnit'),
+          refQ  = document.getElementById('bbRefQty'),
+          refW  = document.getElementById('bbRefW'),
+          total = document.getElementById('bbTotal'),
+          qty   = document.getElementById('quantity');
+      function calcUnit() {
+        var q = num(refQ), w = num(refW);
+        if (q > 0 && w > 0) { unit.value = (w / q).toFixed(3); calcQty(); }
+      }
+      function calcQty() {
+        var u = num(unit), t = num(total);
+        if (u > 0 && t > 0) { qty.value = Math.max(1, Math.round(t / u)); }
+      }
+      if (refQ)  refQ.addEventListener('input', calcUnit);
+      if (refW)  refW.addEventListener('input', calcUnit);
+      if (unit)  unit.addEventListener('input', calcQty);
+      if (total) total.addEventListener('input', calcQty);
+    })();
+    </script>
   </div>
 </article>
 <?php endif; ?>

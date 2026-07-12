@@ -74,6 +74,7 @@ class InventoryController extends Controller
             'resultTo'       => 0,
             'part'           => null,
             'colors'         => [],
+            'unitWeight'     => null,
             'categories'     => $categories,
             'excludedCatIds' => $excludedCatIds,
             'includePrinted' => $includePrinted,
@@ -87,8 +88,9 @@ class InventoryController extends Controller
             $part = $this->catalog->findPart($partNum);
             if ($part !== null) {
                 $colors = $this->catalog->colorsForPart($partNum);
-                $data['part']   = $part;
-                $data['colors'] = !empty($colors) ? $colors : $this->catalog->colors();
+                $data['part']       = $part;
+                $data['colors']     = !empty($colors) ? $colors : $this->catalog->colors();
+                $data['unitWeight'] = $this->items->unitWeightForPart($partNum);
             } else {
                 $this->flash('error', 'Teil „' . $partNum . '" nicht im Katalog gefunden.');
             }
@@ -214,6 +216,13 @@ class InventoryController extends Controller
         }
 
         $itemId = $this->items->findOrCreateElement($partNum, $colorId);
+
+        // Einzelgewicht (falls angegeben) am Item merken – für spätere Zählungen.
+        $unitWeight = (float) str_replace(',', '.', (string) $this->request->post('unit_weight', ''));
+        if ($unitWeight > 0) {
+            $this->items->setUnitWeight($itemId, $unitWeight);
+        }
+
         try {
             $this->stock->add($itemId, (int) $container['id'], $ownerId, $cond, $visibility, $qty, $user->userId, null);
         } catch (\Throwable $e) {
