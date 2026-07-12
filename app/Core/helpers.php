@@ -48,6 +48,22 @@ if (!function_exists('asset_url')) {
     }
 }
 
+if (!function_exists('contrast_text_color')) {
+    /** Lesbare Textfarbe (#000/#fff) für einen Hintergrund-Hex (z. B. Farb-RGB). */
+    function contrast_text_color($rgbHex): string
+    {
+        $hex = ltrim((string) $rgbHex, '#');
+        if (strlen($hex) !== 6 || !ctype_xdigit($hex)) {
+            return '#000';
+        }
+        $r = hexdec(substr($hex, 0, 2));
+        $g = hexdec(substr($hex, 2, 2));
+        $b = hexdec(substr($hex, 4, 2));
+        // wahrgenommene Helligkeit (ITU-R BT.601)
+        return (0.299 * $r + 0.587 * $g + 0.114 * $b) < 140 ? '#fff' : '#000';
+    }
+}
+
 if (!function_exists('part_image_url')) {
     /**
      * Bild-URL eines LEGO-Elements über das öffentliche Rebrickable-CDN

@@ -133,11 +133,19 @@ use App\Service\ContainerRules;
 
       <div class="formRow">
         <label for="color_id">Farbe</label>
-        <select id="color_id" name="color_id" required>
-          <?php foreach ($colors as $c): ?>
-            <option value="<?= e($c['id']) ?>"><?= e($c['name']) ?> (#<?= e($c['rgb'] ?? '') ?>)</option>
-          <?php endforeach; ?>
-        </select>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="color_id" name="color_id" required onchange="bbColorSwatch()">
+            <?php foreach ($colors as $c): ?>
+              <?php $rgb = trim((string) ($c['rgb'] ?? '')); ?>
+              <option value="<?= e($c['id']) ?>" data-rgb="<?= e($rgb) ?>"
+                      style="<?= $rgb !== '' ? 'background-color:#' . e($rgb) . ';color:' . contrast_text_color($rgb) : '' ?>">
+                <?= e($c['name']) ?><?= $rgb !== '' ? ' (#' . e($rgb) . ')' : '' ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
+          <span id="bbSwatch" title="Farbvorschau"
+                style="width:26px;height:26px;border-radius:5px;border:1px solid var(--wcfContentBorder);display:inline-block;flex:0 0 auto"></span>
+        </div>
         <div class="hint">Farben laut Rebrickable für dieses Teil (sonst alle Farben).</div>
       </div>
 
@@ -200,6 +208,14 @@ use App\Service\ContainerRules;
       <a class="btn-ghost" href="<?= e(base_url('container/' . $container['id'])) ?>">Fertig</a>
     </form>
     <script>
+    function bbColorSwatch() {
+      var sel = document.getElementById('color_id'), sw = document.getElementById('bbSwatch');
+      if (!sel || !sw) return;
+      var opt = sel.options[sel.selectedIndex];
+      var rgb = opt ? opt.getAttribute('data-rgb') : '';
+      sw.style.backgroundColor = rgb ? '#' + rgb : 'transparent';
+    }
+    bbColorSwatch();
     (function () {
       function num(el) { return el ? parseFloat((el.value || '').replace(',', '.')) : NaN; }
       var unit  = document.getElementById('bbUnit'),
