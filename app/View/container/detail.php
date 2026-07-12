@@ -158,9 +158,18 @@ use App\Service\ContainerRules;
                     <?= $hidden ?>
                     <input type="hidden" name="new_cond" value="<?= e($row['cond']) ?>">
                     <input type="hidden" name="quantity" value="<?= $qty ?>">
-                    <select name="color_id" style="max-width:150px" onchange="this.form.submit()">
+                    <?php
+                      $curRgb = '';
+                      foreach ($colors as $c) {
+                          if ((int) $c['id'] === (int) $row['color_id']) { $curRgb = trim((string) ($c['rgb'] ?? '')); break; }
+                      }
+                      $selStyle = 'max-width:150px' . ($curRgb !== '' ? ';background-color:#' . e($curRgb) . ';color:' . contrast_text_color($curRgb) : '');
+                    ?>
+                    <select name="color_id" style="<?= $selStyle ?>" onchange="this.form.submit()">
                       <?php foreach ($colors as $c): ?>
-                        <option value="<?= e($c['id']) ?>"<?= (int) $row['color_id'] === (int) $c['id'] ? ' selected' : '' ?>><?= e($c['name']) ?></option>
+                        <?php $rgb = trim((string) ($c['rgb'] ?? '')); ?>
+                        <option value="<?= e($c['id']) ?>"
+                                style="<?= $rgb !== '' ? 'background-color:#' . e($rgb) . ';color:' . contrast_text_color($rgb) : '' ?>"<?= (int) $row['color_id'] === (int) $c['id'] ? ' selected' : '' ?>><?= e($c['name']) ?></option>
                       <?php endforeach; ?>
                     </select>
                   </form>
