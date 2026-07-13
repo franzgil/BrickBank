@@ -48,6 +48,7 @@ $nav = isset($nav) ? $nav : '';
         <li<?= ($nav === 'stock') ? ' class="active"' : '' ?>><a href="<?= e(base_url('stock')) ?>">Bestand</a></li>
         <li<?= ($nav === 'label') ? ' class="active"' : '' ?>><a href="<?= e(base_url('label')) ?>">Etiketten</a></li>
         <li<?= ($nav === 'stocktake') ? ' class="active"' : '' ?>><a href="<?= e(base_url('stocktake')) ?>">Inventur</a></li>
+        <li<?= ($nav === 'help') ? ' class="active"' : '' ?>><a href="<?= e(base_url('anleitung')) ?>">Anleitung</a></li>
       </ul>
     </div>
   </nav>

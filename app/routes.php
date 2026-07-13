@@ -15,9 +15,11 @@ use App\Controller\StocktakeController;
 use App\Controller\InventoryController;
 use App\Controller\StockController;
 use App\Controller\ProjectController;
+use App\Controller\HelpController;
 
 $router->get('/', [HomeController::class, 'index']);
 $router->get('/ping', [HomeController::class, 'ping']);   // Diagnose ohne DB
+$router->get('/anleitung', [HelpController::class, 'index']);
 
 // --- Dashboard / Konten ---
 $router->get('/dashboard', [DashboardController::class, 'index']);
